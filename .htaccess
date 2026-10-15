@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Если запрос УЖЕ начинается с public/ — не трогаем его
+RewriteCond %{REQUEST_URI} !^/public/
+
+# Всё остальное — редирект в public/
+RewriteRule ^(.*)$ public/$1 [L]
