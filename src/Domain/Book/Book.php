@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Book;
 
-use \InvalidArgumentException;
-
 final class Book
 {
     private function __construct(
@@ -17,7 +15,7 @@ final class Book
 
         private \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt
-    ){
+    ) {
         self::validateTitle($title);
         self::validateYear($year);
         self::validateDescription($description);
@@ -35,7 +33,7 @@ final class Book
 
         return new self(
             id: 0,
-            title: $title,
+            title: \trim($title),
             year: $year,
             description: $description,
             authorIds: $authorIds,
@@ -54,7 +52,7 @@ final class Book
     ): self{
         return new self(
             id: $id,
-            title: trim($title),
+            title: $title,
             year: $year,
             description: $description,
             authorIds:$authorIds,
@@ -63,52 +61,55 @@ final class Book
         );
     }
     private function validateTitle(string $title): void{
-        if(trim($title) === ''){
+        if(\trim($title) === ''){
             throw new \InvalidArgumentException(
                 'Title cannot be empty'
             );
         }
-        if(mb_strlen($title, 'UTF-8') > 200){
-            throw new InvalidArgumentException(
+        if(\mb_strlen($title, 'UTF-8') > 200){
+            throw new \InvalidArgumentException(
                 'Title too long (max 200 chars)'
             );
         }
     }
     private function validateYear(int $year): void{
         if($year < 1000){
-            throw new InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 'Year must be 1000 or later'
             );
         }
-        $currentYear = (int)date('Y', time());
+        $currentYear = (int)\date('Y');
         if($year > $currentYear){
-            throw new InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 'Year cannot be more than '. $currentYear
             );
         }
     }
     private function validateDescription(?string $description): void{
-        if(is_string($description) && mb_strlen($description, 'UTF-8') > 10000){
-            throw new InvalidArgumentException(
+        if ($description === null) {
+            return;
+        }
+        if(\is_string($description) && \mb_strlen($description, 'UTF-8') > 10000){
+            throw new \InvalidArgumentException(
                 'Description too long'
             );
         }
     }
     private function validateAuthorIds(array $authorIds): void{
-        foreach($authorIds as $authorKey => $authorId){
-            if(!is_int($authorId)){
-                throw new InvalidArgumentException(
+        foreach($authorIds as $authorId){
+            if(!\is_int($authorId)){
+                throw new \InvalidArgumentException(
                     'Each author ID must be an integer'
                 );
             }
             if($authorId <= 0){
-                throw new InvalidArgumentException(
-                    'Author id must be positive. Yo tried to fill: ' . $authorId;
+                throw new \InvalidArgumentException(
+                    'Author id must be positive. You tried to fill: ' . $authorId
                 );
             }
         }
-        if(count($authorIds) !== array_unique($authorIds)){
-            throw new InvalidArgumentException(
+        if(\count($authorIds) !== \count(array_unique($authorIds))){
+            throw new \InvalidArgumentException(
                 'Duplicate author Ids'
             );
         }
@@ -141,29 +142,48 @@ final class Book
     public function rename(string $newTitle): void{
         $this->validateTitle($newTitle);
         $this->title = $newTitle;
+
+        $this->updatedAt= new \DateTimeImmutable();
     }
     public function changeYear(int $newYear): void{
         $this->validateYear($newYear);
         $this->year = $newYear;
+
+        $this->updatedAt= new \DateTimeImmutable();
     }
     public function changeDescription(?string $newDescription): void{
         $this->validateDescription($newDescription);
         $this->description = $newDescription;
+
+        $this->updatedAt= new \DateTimeImmutable();
     }
     public function addAuthor(int $authorId): void{
-        $this->validateauthorIds([$authorId]);
-        $this->authorIds[] = $authorId;
+        if($authorId <= 0){
+            throw new \InvalidArgumentException('Author ID must be positive');
+        }
+        if (!$this->hasAuthor($authorId)) {
+            $this->authorIds[] = $authorId;
+        }else{
+            throw new \InvalidArgumentException('Author is already added');
+        }
+
+        $this->updatedAt = new \DateTimeImmutable();
+
     }
     public function removeAuthor(int $authorId): void{
-        foreach($this->authorIds as &$authorIdValue){
-            if($authorIdValue == $authorId){
-                unset($authorIdValue);
-            }
+
+        $removingAuthorKey = array_search($authorId, $this->authorIds);
+
+        if($removingAuthorKey !== false){
+            unset($this->authorIds[$removingAuthorKey]);
+            $this->updatedAt= new \DateTimeImmutable();
         }
         $this->authorIds = \array_values($this->authorIds);
-    }
-    public function hasAuthor(){
 
+
+    }
+    public function hasAuthor(int $authorId): bool{
+        return \in_array($authorId, $this->authorIds, true);
     }
 
 }
