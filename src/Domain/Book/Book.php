@@ -13,7 +13,7 @@ final class Book
         private string $title,
         private int $year,
         private ?string $description,
-        private array $authors,
+        private array $authorIds,
 
         private \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt
@@ -21,14 +21,14 @@ final class Book
         self::validateTitle($title);
         self::validateYear($year);
         self::validateDescription($description);
-        self::validateAuthors($authors);
+        self::validateAuthorIds($authorIds);
 
     }
     public static function create(
         string $title,
         int $year,
         ?string $description = null,
-        array $authors = []
+        array $authorIds = []
     ): self{
 
         $now = new \DateTimeImmutable();
@@ -38,7 +38,7 @@ final class Book
             title: $title,
             year: $year,
             description: $description,
-            authors: $authors,
+            authorIds: $authorIds,
             createdAt: $now,
             updatedAt: $now
         );
@@ -48,7 +48,7 @@ final class Book
         string $title,
         int $year,
         ?string $description,
-        array $authors,
+        array $authorIds,
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt
     ): self{
@@ -57,7 +57,7 @@ final class Book
             title: trim($title),
             year: $year,
             description: $description,
-            authors:$authors,
+            authorIds:$authorIds,
             createdAt: $createdAt,
             updatedAt: $updatedAt
         );
@@ -94,18 +94,23 @@ final class Book
             );
         }
     }
-    private function validateAuthors(array $authors): void{
-        foreach($authors as $authorKey => $author){
-            if(!is_string($author)){
+    private function validateAuthorIds(array $authorIds): void{
+        foreach($authorIds as $authorKey => $authorId){
+            if(!is_int($authorId)){
                 throw new InvalidArgumentException(
-                    'Each author must be a string'
+                    'Each author ID must be an integer'
                 );
             }
-            if(mb_strlen($author, 'UTF-8') > 200){
+            if($authorId <= 0){
                 throw new InvalidArgumentException(
-                    'Author #' . $authorKey . ' is too long'
+                    'Author id must be positive. Yo tried to fill: ' . $authorId;
                 );
             }
+        }
+        if(count($authorIds) !== array_unique($authorIds)){
+            throw new InvalidArgumentException(
+                'Duplicate author Ids'
+            );
         }
     }
     public function id(): int{
@@ -120,8 +125,8 @@ final class Book
     public function description(): ?string{
         return $this->description;
     }
-    public function authors(): array{
-        return $this->authors;
+    public function authorIds(): array{
+        return $this->authorIds;
     }
     public function createdAt(): \DateTimeImmutable{
         return $this->createdAt;
@@ -145,20 +150,20 @@ final class Book
         $this->validateDescription($newDescription);
         $this->description = $newDescription;
     }
-    public function addAuthor(string $authorName): void{
-        $this->validateAuthors([$authorName]);
-        $this->authors[] = $authorName;
+    public function addAuthor(int $authorId): void{
+        $this->validateauthorIds([$authorId]);
+        $this->authorIds[] = $authorId;
     }
-    public function removeAuthor($authorName): void{
-        foreach($this->authors as &$author){
-            if($author == $authorName){
-                unset($author);
+    public function removeAuthor(int $authorId): void{
+        foreach($this->authorIds as &$authorIdValue){
+            if($authorIdValue == $authorId){
+                unset($authorIdValue);
             }
         }
-        $this->authors = \array_values($this->authors);
+        $this->authorIds = \array_values($this->authorIds);
     }
     public function hasAuthor(){
-        
+
     }
 
 }
