@@ -41,3 +41,13 @@ echo 'createdAt: '; var_dump($book->createdAt()->format('Y-m-d')); // "2026-10-2
 
 $notFound = $repo->findById(999);
 echo 'not found: '; var_dump($notFound);     // NULL
+
+
+
+
+
+$books = $repo->all();
+var_dump(count($books));   // 3
+
+// Пустая страница (offset за пределы)
+var_dump($repo->all(10, 100));   // array(0) {}
