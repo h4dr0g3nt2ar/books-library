@@ -65,6 +65,10 @@ final class PdoBookRepository implements BookRepositoryInterface
         $stmt->execute();
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
+        if($rows === []){
+            return [];
+        }
+
         $bookIds = [];
         foreach ($rows as $row) {
             $bookIds[] = (int) $row['id'];
@@ -73,14 +77,15 @@ final class PdoBookRepository implements BookRepositoryInterface
 
         $stmt = $this->pdo->prepare("SELECT * FROM book_author WHERE book_id IN ($placeholders)");
         $stmt->execute($bookIds);
-        $relations = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $relations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $authorIdsByBook = [];
         foreach($relations as $relation){
             $authorIdsByBook[(int)$relation['book_id']][] = (int)$relation['author_id'];
         }
 
-        foreach($rows as &$row){
+        $books = [];
+        foreach($rows as $row){
 
             $bookId = (int)$row['id'];
 
@@ -88,8 +93,8 @@ final class PdoBookRepository implements BookRepositoryInterface
                 id: (int)$row['id'],
                 title: $row['title'],
                 year: (int)$row['year'],
-                description: $row['description'], 
-                authorIds: $authorIdsByBook[$bookId],
+                description: $row['description'],
+                authorIds: $authorIdsByBook[$bookId] ?? [],
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
