@@ -13,9 +13,31 @@ use App\Domain\Author\Author;
 
 var_dump(class_exists(\App\Domain\Book\Book::class));
 
-$author = Author::create('Абдула Альхазред', 'Безумный араб, автор проклятого Некрономикона' );
-var_dump($author->id());
-var_dump($author->name());
-var_dump($author->description());
-var_dump($author->createdAt());
-var_dump($author->updatedAt());
+
+$pdo = new \PDO(
+    'mysql:host=127.0.0.1;dbname=books;charset=utf8mb4',
+    'root',
+    '',
+    [
+        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+    ]
+);
+$repo = new PdoBookRepository($pdo);
+
+$book = Book::create('Зов Ктулху',  2023, null, [2]);
+$repo->save($book);
+
+var_dump($book->isNew());
+var_dump($book->id());
+
+$repo = new PdoBookRepository($pdo);
+
+$book = $repo->findById(1);
+echo 'id: '; var_dump($book->id());          // int(1)
+echo 'year: '; var_dump($book->year());      // int(1968)
+echo 'authorIds: '; var_dump($book->authorIds()); // array(1) { [0]=> int(1) }
+echo 'createdAt: '; var_dump($book->createdAt()->format('Y-m-d')); // "2026-10-20"
+
+$notFound = $repo->findById(999);
+echo 'not found: '; var_dump($notFound);     // NULL

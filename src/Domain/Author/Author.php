@@ -99,6 +99,16 @@ final class Author
     public function isNew():bool {
         return $this->id === 0;
     }
+    public function assignId(int $id): void{
 
+        if(!$this->isNew()){
+            throw new \RuntimeException('Cannot assign id to already saved entity');
+        }
+        if($id <= 0){
+            throw new \InvalidArgumentException('ID must be positive');
+        }
+
+        $this->id = $id;
+    }
 
 }
