@@ -155,7 +155,7 @@ final class Book
         $this->validateDescription($newDescription);
         $this->description = $newDescription;
 
-        $this->updatedAt= new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
     }
     public function addAuthor(int $authorId): void{
         if($authorId <= 0){

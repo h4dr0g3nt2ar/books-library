@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Database;
 
-use App\Domain\Book;
 use App\Domain\Book\Book;
 use App\Domain\Book\BookRepositoryInterface;
 
@@ -107,13 +106,58 @@ final class PdoBookRepository implements BookRepositoryInterface
             throw new \InvalidArgumentException('Cannot delete unsaved book');
         }
         $stmt = $this->pdo->prepare("DELETE FROM books WHERE id = :id");
-        $stmt->execute(['id'=>$book->id()]);
+        $stmt->execute(['id' => $book->id()]);
 
     }
     public function count(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM books");
         return (int)$stmt->fetchColumn();
+    }
+    private function insertBook(Book $book): void {
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO books (title, year, description, created_at, updated_at) 
+            VALUES (:title, :year, :description, :created_at, :updated_at)");
+        $stmt->execute(
+            [
+                'title' => $book->title(),
+                'year' => $book->year(),
+                'description' => $book->description(),
+                'created_at' => $book->createdAt()->format('Y-m-d H:i:s'),
+                'updated_at' => $book->updatedAt()->format('Y-m-d H:i:s')
+            ]
+        );
+        $book->assignId((int) $this->pdo->lastInsertId());
+
+    }
+    private function updateBook(Book $book): void {
+        $stmt = $this->pdo->prepare(
+            "UPDATE books SET title = :title, year = :year, description = :description, updated_at = :updated_at
+            WHERE id = :id
+        ");
+        $stmt->execute(
+            [
+                'id' => $book->id(),
+                'title' => $book->title(),
+                'year' => $book->year(),
+                'description' => $book->description(),
+                'updated_at' => $book->updatedAt()->format('Y-m-d H:i:s')
+            ]
+        );
+    }
+    private function syncAuthors(Book $book): void {
+
+        if ($book->authorIds() === []) {
+            return;
+        }
+
+        $stmt = $this->pdo->prepare("DELETE FROM book_author WHERE book_id = :book_id");
+        $stmt->execute(['book_id' => $book->id()]);
+
+        $stmt= $this->pdo->prepare('INSERT INTO book_author (book_id, author_id) VALUES (:book_id, :author_id)');
+        foreach($book->authorIds() as $authorId){
+            $stmt->execute(['book_id' => $book->id(), 'author_id' => $authorId]);
+        }
     }
 
 }
