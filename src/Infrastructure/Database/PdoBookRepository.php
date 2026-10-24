@@ -9,9 +9,7 @@ use App\Domain\Book\BookRepositoryInterface;
 
 final class PdoBookRepository implements BookRepositoryInterface
 {
-    public function __construct(private readonly \PDO $pdo,){
-        return $pdo;
-    }
+    public function __construct(private readonly \PDO $pdo,){ }
     public function save(Book $book): void
     {
         $this->pdo->beginTransaction();

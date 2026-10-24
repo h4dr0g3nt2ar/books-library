@@ -9,21 +9,13 @@ use App\Domain\Author\AuthorRepositoryInterface;
 
 final class PdoAuthorRepository implements AuthorRepositoryInterface
 {
-    public function __construct(private readonly \PDO $pdo,){
-        return $pdo;
-    }
+    public function __construct(private readonly \PDO $pdo){ }
     public function save(Author $author): void
     {
-
-        try{
-            if($author->isNew()){
-                $this->insertAuthor($author);
-            }else{
-                $this->updateAuthor($author);
-            }
-
-        }catch(\Throwable $e){
-            throw $e;
+        if($author->isNew()){
+            $this->insertAuthor($author);
+        }else{
+            $this->updateAuthor($author);
         }
     }
     public function findById(int $id): ?Author
@@ -47,9 +39,35 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
     }
     public function findByIds(array $ids): array{
 
+        if($ids ===[]){
+            return [];
+        }
+
         $placeholders = \implode(',', \array_fill(0, \count($ids), '?'));
 
         $stmt = $this->pdo->prepare("SELECT * FROM authors WHERE id IN ($placeholders)");
+
+        $stmt->execute($ids);
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if($rows === []){
+            return [];
+        }
+
+        $authors = [];
+
+        foreach($rows as $row){
+            $authors[]= Author::reconstitute(
+                id: (int)$row['id'],
+                name: $row['name'],
+                description: $row['description'],
+                createdAt: new \DateTimeImmutable($row['created_at']),
+                updatedAt: new \DateTimeImmutable($row['updated_at'])
+            );
+        }
+
+        return $authors;
     }
     public function findByName(string $name): ?Author{
         $stmt = $this->pdo->prepare("SELECT * FROM authors WHERE name=:name");
@@ -82,16 +100,8 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
             return [];
         }
 
-        $authorIds = [];
-        foreach ($rows as $row) {
-            $authords[] = (int) $row['id'];
-        }
-        $placeholders = \implode(',', \array_fill(0, \count($authorIds), '?'));
-
         $authors = [];
         foreach($rows as $row){
-
-            $authorId = (int)$row['id'];
 
             $authors[] = Author::reconstitute(
                 id: (int)$row['id'],
