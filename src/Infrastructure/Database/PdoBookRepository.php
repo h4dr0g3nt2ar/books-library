@@ -82,12 +82,16 @@ final class PdoBookRepository implements BookRepositoryInterface
         }
 
         $books = [];
+
+        \App\Infrastructure\Debug\Debug::dtc($rows);
+
         foreach($rows as $row){
 
             $bookId = (int)$row['id'];
+            \App\Infrastructure\Debug\Debug::dtc($bookId);
 
             $books[] = Book::reconstitute(
-                id: (int)$row['id'],
+                id: $bookId,
                 title: $row['title'],
                 year: (int)$row['year'],
                 description: $row['description'],
@@ -96,6 +100,7 @@ final class PdoBookRepository implements BookRepositoryInterface
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
         }
+
         return $books;
     }
     public function delete(Book $book): void
