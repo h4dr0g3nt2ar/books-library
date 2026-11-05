@@ -7,6 +7,7 @@ namespace App\Presentation\Controller;
 use App\Infrastructure\Database\PdoBookRepository;
 use App\Infrastructure\Database\PdoAuthorRepository;
 
+
 final class BookController
 {
 
@@ -52,6 +53,42 @@ final class BookController
         require BASE_PATH . '/src/Presentation/View/layout.php';
 
         \App\Infrastructure\Debug\Debug::dtc($authors);
+    }
+    public function show( int $id): void{
+        $book = $this->bookRepo->findById($id);
+
+        if ($book === null) {
+            http_response_code(404);
+            echo '<h1>Книга не найдена</h1>';
+            echo '<a href="/books">К списку книг</a>';
+            return;
+        }
+
+        $allAuthors = [];
+
+        if(!empty($book)) {
+            $authorIds = $book->authorIds() ?? [];
+
+            $authors = $this->authorRepo->findByIds($authorIds);
+
+            $authorsById = [];
+
+            foreach($authors as $author){
+                $authorsById[$author->id()] = $author;
+            }
+        }
+
+        $title = $book->title();
+
+        $data = [
+            'book' => $book,
+            'title' => $title,
+            'authorsById' => $authorsById
+        ];
+        $content = render('book/show', $data);
+
+        require BASE_PATH . '/src/Presentation/View/layout.php';
+
     }
 
 }

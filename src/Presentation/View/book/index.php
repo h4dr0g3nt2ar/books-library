@@ -17,6 +17,8 @@
             <th>Название</th>
             <th>Год</th>
             <th>Авторы</th>
+            <th>Дата создания</th>
+            <th>Дата изменения</th>
             <th></th>
         </tr>
         </thead>
@@ -37,6 +39,8 @@
                     echo $names === [] ? '—' : implode(', ', $names);
                     ?>
                 </td>
+                <td><?=$book->createdAt()->format('d.m.Y H:i:s')?></td>
+                <td><?=$book->updatedAt()->format('d.m.Y H:i:s')?></td>
                 <td class="text-end">
                     <a href="/books/<?= $book->id() ?>" class="btn btn-sm btn-outline-primary">Открыть</a>
                 </td>
@@ -45,3 +49,4 @@
         </tbody>
     </table>
 <?php endif; ?>
+
