@@ -5,12 +5,13 @@ declare(strict_types=1);
 define('BASE_PATH', \dirname(__DIR__));
 
 require __DIR__ . '/../vendor/autoload.php';
-
 require BASE_PATH . '/src/Presentation/View/render.php';
 
-////use App\Domain\Book\Book;
-//use App\Infrastructure\Database\PdoBookRepository;
-////use App\Infrastructure\Debug\Debug;
+use App\Infrastructure\Database\PdoBookRepository;
+use App\Infrastructure\Database\PdoAuthorRepository;
+use App\Presentation\Controller\BookController;
+use App\Presentation\Controller\AuthorController;
+use App\Presentation\Router;
 
 $pdo = new \PDO(
     'mysql:host=127.0.0.1;dbname=books;charset=utf8mb4',
@@ -22,15 +23,25 @@ $pdo = new \PDO(
     ]
 );
 
-//$repo = new PdoBookRepository($pdo);
+$bookRepo = new PdoBookRepository($pdo);
+$authorRepo = new PdoAuthorRepository($pdo);
 
-$content = render('home');
+$bookController = new BookController($bookRepo, $authorRepo);
+//$authorControler = new App\Presentation\Controller\AuthorController($authorRepo);
 
-$bookRepo = new App\Infrastructure\Database\PdoBookRepository($pdo);
-$authorRepo = new App\Infrastructure\Database\PdoAuthorRepository($pdo);
+$router = new Router();
 
-$bookController = new App\Presentation\Controller\BookController($bookRepo, $authorRepo);
+$router->get('/', function() {
+    $title = 'Главная';
+    $content = render('home');
+    require BASE_PATH . '/src/Presentation/View/layout.php';
+});
+$router->get('/books', function() use($bookController){
+    $bookController->index();
+});
+$router->get('/books/{id}', function ($id) use ($bookController){
+    $bookController->show((int) $id);
+});
 
-$bookController->index();
+$router->run($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
 
-require BASE_PATH . '/src/Presentation/View/layout.php';
