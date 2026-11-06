@@ -39,9 +39,32 @@ $router->get('/', function() {
 $router->get('/books', function() use($bookController){
     $bookController->index();
 });
+$router->get('/books/create', function () use ($bookController){
+    $bookController->create();
+});
+$router->post('/books', function () use ($bookController) {
+    $bookController->store();
+});
+$router->get('/books/{id}/edit', function ($id) use ($bookController){
+    $bookController->edit((int) $id);
+});
+$router->post('/books/{id}', function ($id) use ($bookController) {
+    $bookController->update((int) $id);
+});
+$router->post('/books/{id}/delete', function ($id) use ($bookController){
+    $bookController->delete((int) $id);
+});
 $router->get('/books/{id}', function ($id) use ($bookController){
     $bookController->show((int) $id);
 });
+
+//$router->get('/authors', function () use ($authorController) {
+//    $authorController->index();
+//});
+//$router->get('/authors/{id}', function ($id) use ($authorController) {
+//    $authorController->show((int) $id);
+//});
+
 
 $router->run($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
 

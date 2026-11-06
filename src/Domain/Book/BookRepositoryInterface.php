@@ -17,4 +17,5 @@ interface BookRepositoryInterface
     public function all(int $limit = 100, int $offset = 0): array;
     public function delete(Book $book): void;
     public function count(): int;
+    public function findByAuthorId(int $authorId): array;
 }

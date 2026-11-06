@@ -1,6 +1,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><?= htmlspecialchars($book->title()) ?></h1>
-    <a href="/books/<?= $book->id() ?>/edit" class="btn btn-primary">Редактировать</a>
+    <div class="d-flex gap-2">
+        <a href="/books/<?= $book->id() ?>/edit" class="btn btn-primary">Редактировать</a>
+        <form method="post" action="/books/<?= $book->id() ?>/delete" class="d-inline" onsubmit="return confirm('Удалить книгу?')">
+            <button type="submit" class="btn btn-danger">Удалить</button>
+        </form>
+    </div>
 </div>
 
 <div class="card shadow-sm">

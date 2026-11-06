@@ -43,6 +43,10 @@
                 <td><?=$book->updatedAt()->format('d.m.Y H:i:s')?></td>
                 <td class="text-end">
                     <a href="/books/<?= $book->id() ?>" class="btn btn-sm btn-outline-primary">Открыть</a>
+                    <a href="/books/<?= $book->id()?>/edit" class="btn btn-sm btn-secondary">Изменить</a>
+                    <form method="post" action="/books/<?= $book->id() ?>/delete" class="d-inline" onsubmit="return confirm('Удалить книгу?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                    </form>
                 </td>
             </tr>
         <?php endforeach; ?>

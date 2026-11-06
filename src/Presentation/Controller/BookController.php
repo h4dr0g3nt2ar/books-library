@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace App\Presentation\Controller;
 
+use App\Domain\Book\Book;
 use App\Infrastructure\Database\PdoBookRepository;
 use App\Infrastructure\Database\PdoAuthorRepository;
 
@@ -52,7 +53,6 @@ final class BookController
 
         require BASE_PATH . '/src/Presentation/View/layout.php';
 
-        \App\Infrastructure\Debug\Debug::dtc($authors);
     }
     public function show( int $id): void{
         $book = $this->bookRepo->findById($id);
@@ -64,18 +64,11 @@ final class BookController
             return;
         }
 
-        $allAuthors = [];
+        $authors = $this->authorRepo->findByIds($book->authorIds());
+        $authorsById = [];
 
-        if(!empty($book)) {
-            $authorIds = $book->authorIds() ?? [];
-
-            $authors = $this->authorRepo->findByIds($authorIds);
-
-            $authorsById = [];
-
-            foreach($authors as $author){
-                $authorsById[$author->id()] = $author;
-            }
+        foreach($authors as $author){
+            $authorsById[$author->id()] = $author;
         }
 
         $title = $book->title();
@@ -89,6 +82,163 @@ final class BookController
 
         require BASE_PATH . '/src/Presentation/View/layout.php';
 
+    }
+    public function create(): void{
+        $authors = $this->authorRepo->all();
+
+       // \App\Infrastructure\Debug\Debug::dtc($authors);
+
+        $title = 'Добавить книгу';
+        $data = [
+            'book' => null,
+            'title' => $title,
+            'authors' => $authors,
+            'errors' => []
+        ];
+
+        $content = render('book/form', $data);
+
+        require BASE_PATH . '/src/Presentation/View/layout.php';
+    }
+    public function store(): void{
+
+        $title = $_POST['title'] ?? '';
+        $year = (int)$_POST['year'];
+        $authorIds = array_map('intval', $_POST['authorIds'] ?? []);
+        $description = $_POST['description'] ?? null;
+        $errors = [];
+
+        try {
+            $book = Book::create(
+                title: $title,
+                year: $year,
+                description: $description,
+                authorIds: $authorIds
+            );
+        }catch (\InvalidArgumentException $e){
+            $errors[] = $e->getMessage();
+        }
+        if ($errors !== []) {
+
+            $authors = $this->authorRepo->all();
+            $title = 'Добавить книгу';
+
+            $data = [
+                'book' => null,
+                'title' => $title,
+                'authors' => $authors,
+                'errors' => $errors,
+                'old' => $_POST,
+            ];
+            $content = render('book/form', $data);
+
+            require BASE_PATH . '/src/Presentation/View/layout.php';
+
+            return;
+        }
+        $this->bookRepo->save($book);
+        header('Location: /books');
+
+        exit;
+    }
+    public function edit(int $id): void{
+        $book = $this->bookRepo->findById($id);
+
+        if ($book === null) {
+            http_response_code(404);
+            echo '<h1>Книга не найдена</h1>';
+            echo '<a href="/books">К списку книг</a>';
+            return;
+        }
+        $authors = $this->authorRepo->all();
+        $title = 'Редактировать книгу';
+
+        $data = [
+            'book' => $book,
+            'title' => $title,
+            'authors' => $authors,
+            'errors' => []
+        ];
+
+        $content = render('book/form', $data);
+
+        require BASE_PATH . '/src/Presentation/View/layout.php';
+
+    }
+    public function update(int $id): void{
+        $book = $this->bookRepo->findById($id);
+
+        if ($book === null) {
+            http_response_code(404);
+            echo '<h1>Книга не найдена</h1>';
+            echo '<a href="/books">К списку книг</a>';
+            return;
+        }
+
+        $title = $_POST['title'] ?? '';
+        $year = (int)$_POST['year'];
+        $authorIds = array_map('intval', $_POST['authorIds'] ?? []);
+        $description = $_POST['description'] ?? '';
+        $errors = [];
+
+        try {
+            $book->rename($title);
+            $book->changeYear($year);
+            $book->changeDescription($description);
+
+            $authorIdsByBook = $book->authorIds();
+
+            foreach($authorIds as $authorId){
+                if(!in_array($authorId, $authorIdsByBook)){
+                    $book->addAuthor($authorId);
+                }
+            }
+
+            foreach ($authorIdsByBook as $authorIdByBook) {
+                if(!in_array($authorIdByBook, $authorIds)){
+                    $book->removeAuthor($authorIdByBook);
+                }
+            }
+
+        }catch (\InvalidArgumentException $e){
+            $errors[] = $e->getMessage();
+        }
+        if ($errors !== []) {
+
+            $title = 'Редактировать книгу';
+
+            $data = [
+                'book' => $book,
+                'title' => $title,
+                'authors' => $this->authorRepo->all(),
+                'errors' => $errors,
+                'old' => $_POST,
+            ];
+            $content = render('book/form', $data);
+
+            require BASE_PATH . '/src/Presentation/View/layout.php';
+
+            return;
+        }
+        $this->bookRepo->save($book);
+        header('Location: /books/' . $book->id());
+
+        exit;
+    }
+    public function delete(int $id): void{
+        $book = $this->bookRepo->findById($id);
+
+        if ($book === null) {
+            http_response_code(404);
+            echo '<h1>Книга не найдена</h1>';
+            echo '<a href="/books">К списку книг</a>';
+            return;
+        }
+        $this->bookRepo->delete($book);
+
+        header('Location: /books');
+
+        exit;
     }
 
 }

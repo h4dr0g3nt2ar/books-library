@@ -54,6 +54,55 @@ final class PdoBookRepository implements BookRepositoryInterface
         );
         return $book;
     }
+    public function findByAuthorId(int $authorId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT b.* FROM books b
+         JOIN book_author ba ON ba.book_id = b.id
+         WHERE ba.author_id = :author_id
+         ORDER BY b.title'
+        );
+        $stmt->execute(['author_id' => $authorId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($rows === []) {
+            return [];
+        }
+
+        // Подгружаем ВСЕХ авторов для этих книг (как в all())
+        $bookIds = [];
+        foreach ($rows as $row) {
+            $bookIds[] = (int) $row['id'];
+        }
+        $placeholders = \implode(',', \array_fill(0, \count($bookIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, author_id FROM book_author WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $relations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $authorIdsByBook = [];
+        foreach ($relations as $relation) {
+            $authorIdsByBook[(int) $relation['book_id']][] = (int) $relation['author_id'];
+        }
+
+        $books = [];
+        foreach ($rows as $row) {
+            $bookId = (int) $row['id'];
+            $books[] = Book::reconstitute(
+                id: $bookId,
+                title: $row['title'],
+                year: (int) $row['year'],
+                description: $row['description'],
+                authorIds: $authorIdsByBook[$bookId] ?? [],
+                createdAt: new \DateTimeImmutable($row['created_at']),
+                updatedAt: new \DateTimeImmutable($row['updated_at']),
+            );
+        }
+
+        return $books;
+    }
+
     public function all(int $limit = 100, int $offset = 0): array
     {
         $stmt = $this->pdo->prepare("SELECT * FROM books ORDER BY id LIMIT :limit OFFSET :offset");
@@ -83,12 +132,9 @@ final class PdoBookRepository implements BookRepositoryInterface
 
         $books = [];
 
-        \App\Infrastructure\Debug\Debug::dtc($rows);
-
         foreach($rows as $row){
 
             $bookId = (int)$row['id'];
-            \App\Infrastructure\Debug\Debug::dtc($bookId);
 
             $books[] = Book::reconstitute(
                 id: $bookId,
