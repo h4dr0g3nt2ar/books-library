@@ -8,6 +8,7 @@ use App\Domain\Book\Book;
 use App\Infrastructure\Database\PdoBookRepository;
 use App\Infrastructure\Database\PdoAuthorRepository;
 
+use App\Domain\Book\Enum\BindingType;
 
 final class BookController
 {
@@ -86,8 +87,6 @@ final class BookController
     public function create(): void{
         $authors = $this->authorRepo->all();
 
-       // \App\Infrastructure\Debug\Debug::dtc($authors);
-
         $title = 'Добавить книгу';
         $data = [
             'book' => null,
@@ -103,9 +102,22 @@ final class BookController
     public function store(): void{
 
         $title = $_POST['title'] ?? '';
-        $year = (int)$_POST['year'];
+        $year = (int) ($_POST['year'] ?? 0);
         $authorIds = array_map('intval', $_POST['authorIds'] ?? []);
-        $description = $_POST['description'] ?? null;
+
+        $description = trim($_POST['description'] ?? '') ?: null;
+
+        $bindingStr = $_POST['binding'] ?? '';
+        $binding = $bindingStr !== '' ? BindingType::from($bindingStr) : null;
+
+        $pagesStr = $_POST['pages'] ?? '';
+        $pages = $pagesStr !== '' ? (int) $pagesStr : null;
+
+        $printRunStr = $_POST['print_run'] ?? '';
+        $printRun = $printRunStr !== '' ? (int) $printRunStr : null;
+
+        $isbn = trim($_POST['isbn'] ?? '') ?: null;
+
         $errors = [];
 
         try {
@@ -113,6 +125,10 @@ final class BookController
                 title: $title,
                 year: $year,
                 description: $description,
+                binding: $binding,
+                pages: $pages,
+                printRun: $printRun,
+                isbn: $isbn,
                 authorIds: $authorIds
             );
         }catch (\InvalidArgumentException $e){
@@ -176,15 +192,32 @@ final class BookController
         }
 
         $title = $_POST['title'] ?? '';
-        $year = (int)$_POST['year'];
+        $year = (int) ($_POST['year'] ?? 0);
         $authorIds = array_map('intval', $_POST['authorIds'] ?? []);
-        $description = $_POST['description'] ?? '';
+
+        $description = trim($_POST['description'] ?? '') ?: null;
+
+        $bindingStr = $_POST['binding'] ?? '';
+        $binding = $bindingStr !== '' ? BindingType::from($bindingStr) : null;
+
+        $pagesStr = $_POST['pages'] ?? '';
+        $pages = $pagesStr !== '' ? (int) $pagesStr : null;
+
+        $printRunStr = $_POST['print_run'] ?? '';
+        $printRun = $printRunStr !== '' ? (int) $printRunStr : null;
+
+        $isbn = trim($_POST['isbn'] ?? '') ?: null;
+
         $errors = [];
 
         try {
             $book->rename($title);
             $book->changeYear($year);
             $book->changeDescription($description);
+            $book->changeBinding($binding);
+            $book->changePages($pages);
+            $book->changePrintRun($printRun);
+            $book->changeIsbn($isbn);
 
             $authorIdsByBook = $book->authorIds();
 

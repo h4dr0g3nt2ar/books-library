@@ -10,6 +10,8 @@ final class Author
         private int $id,
         private string $name,
         private ?string $description,
+        private ?int $birthYear,
+        private ?int $deathYear,
         private \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt
     ) {
@@ -20,12 +22,16 @@ final class Author
     public static function create(
         string $name,
         ?string $description = null,
+        ?int $birthYear = null,
+        ?int $deathYear = null,
     ): self {
         $now = new \DateTimeImmutable();
         return new self(
             id: 0,
             name: \trim($name),
             description: $description,
+            birthYear: $birthYear,
+            deathYear: $deathYear,
             createdAt: $now,
             updatedAt: $now
         );
@@ -35,6 +41,8 @@ final class Author
         int $id,
         string $name,
         ?string $description,
+        ?int $birthYear,
+        ?int $deathYear,
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt
     ): self{
@@ -42,6 +50,8 @@ final class Author
             id: $id,
             name: $name,
             description: $description,
+            birthYear: $birthYear,
+            deathYear: $deathYear,
             createdAt: $createdAt,
             updatedAt: $updatedAt
         );
@@ -68,6 +78,32 @@ final class Author
             );
         }
     }
+    private function validateBirthYear(int $year): void{
+        if($year < 1000){
+            throw new \InvalidArgumentException(
+                'Year must be 1000 or later'
+            );
+        }
+        $currentYear = (int)\date('Y');
+        if($year > $currentYear){
+            throw new \InvalidArgumentException(
+                'Year cannot be more than '. $currentYear
+            );
+        }
+    }
+    private function validateDeathYear(int $year): void{
+        if($year < 1000){
+            throw new \InvalidArgumentException(
+                'Year must be 1000 or later'
+            );
+        }
+        $currentYear = (int)\date('Y');
+        if($year > $currentYear){
+            throw new \InvalidArgumentException(
+                'Year cannot be more than '. $currentYear
+            );
+        }
+    }
     public function rename(string $newName): void{
         $this->validateName($newName);
         $this->name = \trim($newName);
@@ -80,7 +116,17 @@ final class Author
 
         $this->updatedAt= new \DateTimeImmutable();
     }
+    public function changeLifeYears(?int $birthYear, ?int $deathYear): void
+    {
+        // Валидация: год смерти не может быть раньше года рождения
+        if ($birthYear !== null && $deathYear !== null && $deathYear < $birthYear) {
+            throw new \InvalidArgumentException('Death year cannot be before birth year');
+        }
 
+        $this->birthYear = $birthYear;
+        $this->deathYear = $deathYear;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
     public function id():int {
         return $this->id;
     }
@@ -89,6 +135,12 @@ final class Author
     }
     public function description(): ?string{
         return $this->description;
+    }
+    public function birthYear(): ?int{
+        return $this->birthYear;
+    }
+    public function deathYear(): ?int{
+        return $this->deathYear;
     }
     public function createdAt(): \DateTimeImmutable{
         return $this->createdAt;

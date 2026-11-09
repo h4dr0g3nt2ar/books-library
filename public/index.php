@@ -27,7 +27,7 @@ $bookRepo = new PdoBookRepository($pdo);
 $authorRepo = new PdoAuthorRepository($pdo);
 
 $bookController = new BookController($bookRepo, $authorRepo);
-//$authorControler = new App\Presentation\Controller\AuthorController($authorRepo);
+$authorController = new AuthorController($bookRepo, $authorRepo);
 
 $router = new Router();
 
@@ -58,12 +58,27 @@ $router->get('/books/{id}', function ($id) use ($bookController){
     $bookController->show((int) $id);
 });
 
-//$router->get('/authors', function () use ($authorController) {
-//    $authorController->index();
-//});
-//$router->get('/authors/{id}', function ($id) use ($authorController) {
-//    $authorController->show((int) $id);
-//});
+$router->get('/authors', function () use ($authorController) {
+    $authorController->index();
+});
+$router->get('/authors/create', function () use ($authorController){
+    $authorController->create();
+});
+$router->post('/authors', function () use ($authorController) {
+    $authorController->store();
+});
+$router->get('/authors/{id}/edit', function ($id) use ($authorController){
+    $authorController->edit((int) $id);
+});
+$router->post('/authors/{id}', function ($id) use ($authorController) {
+    $authorController->update((int) $id);
+});
+$router->post('/authors/{id}/delete', function ($id) use ($authorController){
+    $authorController->delete((int) $id);
+});
+$router->get('/authors/{id}', function ($id) use ($authorController) {
+    $authorController->show((int) $id);
+});
 
 
 $router->run($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

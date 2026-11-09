@@ -6,6 +6,7 @@ namespace App\Infrastructure\Database;
 
 use App\Domain\Book\Book;
 use App\Domain\Book\BookRepositoryInterface;
+use App\Domain\Book\Enum\BindingType;
 
 final class PdoBookRepository implements BookRepositoryInterface
 {
@@ -49,6 +50,10 @@ final class PdoBookRepository implements BookRepositoryInterface
             year: (int)$row['year'],
             description: $row['description'],
             authorIds: $authorIds,
+            binding: $row['binding'] !== null ? BindingType::from($row['binding']) : null,
+            pages: $row['pages'] !== null ? (int) $row['pages'] : null,
+            printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
+            isbn: $row['isbn'],
             createdAt: new \DateTimeImmutable($row['created_at']),
             updatedAt: new \DateTimeImmutable($row['updated_at'])
         );
@@ -60,7 +65,7 @@ final class PdoBookRepository implements BookRepositoryInterface
             'SELECT b.* FROM books b
          JOIN book_author ba ON ba.book_id = b.id
          WHERE ba.author_id = :author_id
-         ORDER BY b.title'
+         ORDER BY b.year ASC'
         );
         $stmt->execute(['author_id' => $authorId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -95,6 +100,10 @@ final class PdoBookRepository implements BookRepositoryInterface
                 year: (int) $row['year'],
                 description: $row['description'],
                 authorIds: $authorIdsByBook[$bookId] ?? [],
+                binding: $row['binding'] !== null ? BindingType::from($row['binding']) : null,
+                pages: $row['pages'] !== null ? (int) $row['pages'] : null,
+                printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
+                isbn: $row['isbn'],
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at']),
             );
@@ -142,6 +151,10 @@ final class PdoBookRepository implements BookRepositoryInterface
                 year: (int)$row['year'],
                 description: $row['description'],
                 authorIds: $authorIdsByBook[$bookId] ?? [],
+                binding: $row['binding'] !== null ? BindingType::from($row['binding']) : null,
+                pages: $row['pages'] !== null ? (int) $row['pages'] : null,
+                printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
+                isbn: $row['isbn'],
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
@@ -165,13 +178,17 @@ final class PdoBookRepository implements BookRepositoryInterface
     }
     private function insertBook(Book $book): void {
         $stmt = $this->pdo->prepare(
-            "INSERT INTO books (title, year, description, created_at, updated_at) 
-            VALUES (:title, :year, :description, :created_at, :updated_at)");
+            "INSERT INTO books (title, year, description, binding, pages, print_run, isbn, created_at, updated_at) 
+            VALUES (:title, :year, :description, :binding, :pages, :print_run, :isbn, :created_at, :updated_at)");
         $stmt->execute(
             [
                 'title' => $book->title(),
                 'year' => $book->year(),
                 'description' => $book->description(),
+                'binding' => $book->binding()?->value,
+                'pages' => $book->pages(),
+                'print_run' => $book->printRun(),
+                'isbn' => $book->isbn(),
                 'created_at' => $book->createdAt()->format('Y-m-d H:i:s'),
                 'updated_at' => $book->updatedAt()->format('Y-m-d H:i:s')
             ]
@@ -181,7 +198,7 @@ final class PdoBookRepository implements BookRepositoryInterface
     }
     private function updateBook(Book $book): void {
         $stmt = $this->pdo->prepare(
-            "UPDATE books SET title = :title, year = :year, description = :description, updated_at = :updated_at
+            "UPDATE books SET title = :title, year = :year, description = :description, binding = :binding, pages = :pages, print_run = :print_run, isbn = :isbn, updated_at = :updated_at
             WHERE id = :id
         ");
         $stmt->execute(
@@ -190,6 +207,10 @@ final class PdoBookRepository implements BookRepositoryInterface
                 'title' => $book->title(),
                 'year' => $book->year(),
                 'description' => $book->description(),
+                'binding' => $book->binding()?->value,
+                'pages' => $book->pages(),
+                'print_run' => $book->printRun(),
+                'isbn' => $book->isbn(),
                 'updated_at' => $book->updatedAt()->format('Y-m-d H:i:s')
             ]
         );

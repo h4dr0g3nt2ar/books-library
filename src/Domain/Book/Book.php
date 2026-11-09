@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Book;
 
+use App\Domain\Book\Enum\BindingType;
+
 final class Book
 {
     private function __construct(
@@ -13,6 +15,11 @@ final class Book
         private ?string $description,
         private array $authorIds,
 
+        private ?BindingType $binding,      // переплет
+        private ?int $pages,                // кол-во страниц
+        private ?int $printRun,             // тираж
+        private ?string $isbn,
+
         private \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt
     ) {
@@ -20,13 +27,20 @@ final class Book
         self::validateYear($year);
         self::validateDescription($description);
         self::validateAuthorIds($authorIds);
+        self::validatePages($pages);
+        self::validatePrintRun($printRun);
+        self::validateIsbn($isbn);
 
     }
     public static function create(
         string $title,
         int $year,
         ?string $description = null,
-        array $authorIds = []
+        array $authorIds = [],
+        ?BindingType $binding = null,
+        ?int $pages = null,
+        ?int $printRun = null,
+        ?string $isbn = null,
     ): self{
 
         $now = new \DateTimeImmutable();
@@ -37,6 +51,10 @@ final class Book
             year: $year,
             description: $description,
             authorIds: $authorIds,
+            binding: $binding,
+            pages: $pages,
+            printRun: $printRun,
+            isbn: $isbn,
             createdAt: $now,
             updatedAt: $now
         );
@@ -47,6 +65,10 @@ final class Book
         int $year,
         ?string $description,
         array $authorIds,
+        ?BindingType $binding,
+        ?int $pages,
+        ?int $printRun,
+        ?string $isbn,
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt
     ): self{
@@ -56,6 +78,10 @@ final class Book
             year: $year,
             description: $description,
             authorIds:$authorIds,
+            binding: $binding,
+            pages: $pages,
+            printRun: $printRun,
+            isbn: $isbn,
             createdAt: $createdAt,
             updatedAt: $updatedAt
         );
@@ -89,7 +115,7 @@ final class Book
         if ($description === null) {
             return;
         }
-        if(\is_string($description) && \mb_strlen($description, 'UTF-8') > 10000){
+        if(\mb_strlen($description, 'UTF-8') > 10000){
             throw new \InvalidArgumentException(
                 'Description too long'
             );
@@ -114,6 +140,41 @@ final class Book
             );
         }
     }
+    private function validatePages(?int $pages): void{
+        if($pages === null){
+            return;
+        }
+        if($pages <= 0){
+            throw new \InvalidArgumentException(
+                'Pages must be positive. You tried to fill: ' . $pages
+            );
+        }
+    }
+    private function validatePrintRun(?int $printRun): void{
+        if($printRun === null){
+            return;
+        }
+        if($printRun <= 0){
+            throw new \InvalidArgumentException(
+                'Print run must be positive. You tried to fill: ' . $printRun
+            );
+        }
+    }
+    private static function validateIsbn(?string $isbn): void
+    {
+        if ($isbn === null) {
+            return;
+        }
+
+        // Убираем дефисы и пробелы для проверки
+        $clean = \preg_replace('/[\s\-]/', '', $isbn);
+
+        // Должен быть 10 или 13 цифр (последний символ может быть X для ISBN-10)
+        if (!\preg_match('/^(\d{9}[\dX]|\d{13})$/i', $clean)) {
+            throw new \InvalidArgumentException('Invalid ISBN format');
+        }
+    }
+
     public function id(): int{
         return $this->id;
     }
@@ -128,6 +189,18 @@ final class Book
     }
     public function authorIds(): array{
         return $this->authorIds;
+    }
+    public function binding(): ?BindingType{
+        return $this->binding;
+    }
+    public function pages(): ?int{
+        return $this->pages;
+    }
+    public function printRun(): ?int{
+        return $this->printRun;
+    }
+    public function isbn(): ?string{
+        return $this->isbn;
     }
     public function createdAt(): \DateTimeImmutable{
         return $this->createdAt;
@@ -157,6 +230,26 @@ final class Book
 
         $this->updatedAt = new \DateTimeImmutable();
     }
+    public function changeBinding(?BindingType $newBinding): void{
+        $this->binding = $newBinding;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+    public function changePages(?int $newPages): void{
+        $this->validatePages($newPages);
+        $this->pages = $newPages;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+    public function changePrintRun(?int $newPrintRun): void{
+        $this->validatePrintRun($newPrintRun);
+        $this->printRun = $newPrintRun;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+    public function changeIsbn(?string $newIsbn): void{
+        $this->validateIsbn($newIsbn);
+        $this->isbn = $newIsbn;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function addAuthor(int $authorId): void{
         if($authorId <= 0){
             throw new \InvalidArgumentException('Author ID must be positive');

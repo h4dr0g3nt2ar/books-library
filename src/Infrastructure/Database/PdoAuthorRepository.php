@@ -32,6 +32,8 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
             id: (int)$row['id'],
             name: $row['name'],
             description: $row['description'],
+            birthYear: $row['birth_year'],
+            deathYear: $row['death_year'],
             createdAt: new \DateTimeImmutable($row['created_at']),
             updatedAt: new \DateTimeImmutable($row['updated_at'])
         );
@@ -62,6 +64,8 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
                 id: (int)$row['id'],
                 name: $row['name'],
                 description: $row['description'],
+                birthYear: $row['birth_year'],
+                deathYear: $row['death_year'],
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
@@ -83,6 +87,8 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
             id: (int)$row['id'],
             name: $row['name'],
             description: $row['description'],
+            birthYear: $row['birth_year'],
+            deathYear: $row['death_year'],
             createdAt: new \DateTimeImmutable($row['created_at']),
             updatedAt: new \DateTimeImmutable($row['updated_at'])
         );
@@ -107,6 +113,8 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
                 id: (int)$row['id'],
                 name: $row['name'],
                 description: $row['description'],
+                birthYear: $row['birth_year'],
+                deathYear: $row['death_year'],
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
@@ -127,34 +135,39 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM authors");
         return (int)$stmt->fetchColumn();
     }
-    private function insertAuthor(Author $author): void {
+    private function insertAuthor(Author $author): void
+    {
         $stmt = $this->pdo->prepare(
-            "INSERT INTO authors (name, description, created_at, updated_at) 
-            VALUES (:name, :description, :created_at, :updated_at)");
-        $stmt->execute(
-            [
-                'name' => $author->name(),
-                'description' => $author->description(),
-                'created_at' => $author->createdAt()->format('Y-m-d H:i:s'),
-                'updated_at' => $author->updatedAt()->format('Y-m-d H:i:s')
-            ]
+            'INSERT INTO authors (name, description, birth_year, death_year, created_at, updated_at)
+         VALUES (:name, :description, :birth_year, :death_year, :created_at, :updated_at)'
         );
+        $stmt->execute([
+            'name'        => $author->name(),
+            'description' => $author->description(),
+            'birth_year'  => $author->birthYear(),
+            'death_year'  => $author->deathYear(),
+            'created_at'  => $author->createdAt()->format('Y-m-d H:i:s'),
+            'updated_at'  => $author->updatedAt()->format('Y-m-d H:i:s'),
+        ]);
         $author->assignId((int) $this->pdo->lastInsertId());
-
     }
-    private function updateAuthor(Author $author): void {
+    private function updateAuthor(Author $author): void
+    {
         $stmt = $this->pdo->prepare(
-            "UPDATE authors SET name = :name, description = :description, updated_at = :updated_at
-            WHERE id = :id
-        ");
-        $stmt->execute(
-            [
-                'id' => $author->id(),
-                'name' => $author->name(),
-                'description' => $author->description(),
-                'updated_at' => $author->updatedAt()->format('Y-m-d H:i:s')
-            ]
+            'UPDATE authors
+         SET name = :name, description = :description,
+             birth_year = :birth_year, death_year = :death_year,
+             updated_at = :updated_at
+         WHERE id = :id'
         );
+        $stmt->execute([
+            'id'          => $author->id(),
+            'name'        => $author->name(),
+            'description' => $author->description(),
+            'birth_year'  => $author->birthYear(),
+            'death_year'  => $author->deathYear(),
+            'updated_at'  => $author->updatedAt()->format('Y-m-d H:i:s'),
+        ]);
     }
 
 

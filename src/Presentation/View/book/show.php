@@ -1,8 +1,8 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><?= htmlspecialchars($book->title()) ?></h1>
     <div class="d-flex gap-2">
-        <a href="/books/<?= $book->id() ?>/edit" class="btn btn-primary">Редактировать</a>
-        <form method="post" action="/books/<?= $book->id() ?>/delete" class="d-inline" onsubmit="return confirm('Удалить книгу?')">
+        <a href="/books/<?= $book->id() ?>/edit" class="btn btn-warning">Изменить</a>
+        <form action="/books/<?= $book->id() ?>/delete" method="post" class="d-inline" onsubmit="return confirm('Удалить книгу?')">
             <button type="submit" class="btn btn-danger">Удалить</button>
         </form>
     </div>
@@ -10,6 +10,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
+
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Авторы:</div>
             <div class="col-sm-9">
@@ -29,7 +30,6 @@
             <div class="col-sm-3 text-muted">Год издания:</div>
             <div class="col-sm-9"><?= $book->year() ?></div>
         </div>
-
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Описание:</div>
             <div class="col-sm-9">
@@ -40,6 +40,28 @@
                 <?php endif; ?>
             </div>
         </div>
+
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Переплёт:</div>
+            <div class="col-sm-9"><?= $book->binding()?->label() ?? '—' ?></div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Страниц:</div>
+            <div class="col-sm-9"><?= $book->pages() ?? '—' ?></div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Тираж:</div>
+            <div class="col-sm-9"><?= $book->printRun() ?? '—' ?></div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">ISBN:</div>
+            <div class="col-sm-9"><?= htmlspecialchars($book->isbn() ?? '—') ?></div>
+        </div>
+
+
 
         <hr>
 
