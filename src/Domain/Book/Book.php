@@ -20,6 +20,10 @@ final class Book
         private ?int $printRun,             // тираж
         private ?string $isbn,
 
+        private ?int $countryId,
+        private ?int $publisherId,
+        private ?int $seriesId,
+
         private \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt
     ) {
@@ -30,6 +34,9 @@ final class Book
         self::validatePages($pages);
         self::validatePrintRun($printRun);
         self::validateIsbn($isbn);
+        self::validateCountryId($countryId);
+        self::validatePublisherId($publisherId);
+        self::validateSeriesId($seriesId);
 
     }
     public static function create(
@@ -41,6 +48,9 @@ final class Book
         ?int $pages = null,
         ?int $printRun = null,
         ?string $isbn = null,
+        ?int $countryId = null,
+        ?int $publisherId = null,
+        ?int $seriesId = null,
     ): self{
 
         $now = new \DateTimeImmutable();
@@ -50,11 +60,18 @@ final class Book
             title: \trim($title),
             year: $year,
             description: $description,
+
             authorIds: $authorIds,
+
             binding: $binding,
             pages: $pages,
             printRun: $printRun,
             isbn: $isbn,
+
+            countryId: $countryId,
+            publisherId: $publisherId,
+            seriesId: $seriesId,
+
             createdAt: $now,
             updatedAt: $now
         );
@@ -69,6 +86,9 @@ final class Book
         ?int $pages,
         ?int $printRun,
         ?string $isbn,
+        ?int $countryId,
+        ?int $publisherId,
+        ?int $seriesId,
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt
     ): self{
@@ -77,11 +97,18 @@ final class Book
             title: $title,
             year: $year,
             description: $description,
+
             authorIds:$authorIds,
+
             binding: $binding,
             pages: $pages,
             printRun: $printRun,
             isbn: $isbn,
+
+            countryId: $countryId,
+            publisherId: $publisherId,
+            seriesId: $seriesId,
+
             createdAt: $createdAt,
             updatedAt: $updatedAt
         );
@@ -174,6 +201,21 @@ final class Book
             throw new \InvalidArgumentException('Invalid ISBN format');
         }
     }
+    private static function validateCountryId(?int $countryId): void{
+        if($countryId !== null && $countryId <= 0 ){
+            throw new \InvalidArgumentException('Country id must be positive. You tried to fill: ' . $countryId);
+        }
+    }
+    private static function validatePublisherId(?int $publisherId): void{
+        if($publisherId !== null && $publisherId <= 0 ){
+            throw new \InvalidArgumentException('Publisher id must be positive. You tried to fill: ' . $publisherId);
+        }
+    }
+    private static function validateSeriesId(?int $seriesId): void{
+        if($seriesId !== null && $seriesId <= 0 ){
+            throw new \InvalidArgumentException('Series id must be positive. You tried to fill: ' . $seriesId);
+        }
+    }
 
     public function id(): int{
         return $this->id;
@@ -201,6 +243,15 @@ final class Book
     }
     public function isbn(): ?string{
         return $this->isbn;
+    }
+    public function countryId(): ?int{
+        return $this->countryId;
+    }
+    public function publisherId(): ?int{
+        return $this->publisherId;
+    }
+    public function seriesId(): ?int{
+        return $this->seriesId;
     }
     public function createdAt(): \DateTimeImmutable{
         return $this->createdAt;
@@ -247,6 +298,21 @@ final class Book
     public function changeIsbn(?string $newIsbn): void{
         $this->validateIsbn($newIsbn);
         $this->isbn = $newIsbn;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+    public function changeCountry(?int $newCountryId): void{
+        $this->validateCountryId($newCountryId);
+        $this->countryId = $newCountryId;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+    public function changePublisher(?int $newPublisherId): void{
+        $this->validatePublisherId($newPublisherId);
+        $this->publisherId = $newPublisherId;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+    public function changeSeries(?int $newSeriesId): void{
+        $this->validateSeriesId($newSeriesId);
+        $this->seriesId = $newSeriesId;
         $this->updatedAt = new \DateTimeImmutable();
     }
 

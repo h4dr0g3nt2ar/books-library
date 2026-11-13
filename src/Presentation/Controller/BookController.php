@@ -9,13 +9,19 @@ use App\Infrastructure\Database\PdoBookRepository;
 use App\Infrastructure\Database\PdoAuthorRepository;
 
 use App\Domain\Book\Enum\BindingType;
+use App\Infrastructure\Database\PdoCountryRepository;
+use App\Infrastructure\Database\PdoPublisherRepository;
+use App\Infrastructure\Database\PdoSeriesRepository;
 
 final class BookController
 {
 
     public function __construct(
         public readonly PdoBookRepository $bookRepo,
-        public readonly PdoAuthorRepository $authorRepo
+        public readonly PdoAuthorRepository $authorRepo,
+        public readonly PdoCountryRepository $countryRepo,
+        public readonly PdoPublisherRepository $publisherRepo,
+        public readonly PdoSeriesRepository $seriesRepo,
     ){
     }
     public function index():void {
@@ -73,10 +79,16 @@ final class BookController
         }
 
         $title = $book->title();
+        $country = $book->countryId() !== null ? $this->countryRepo->findById($book->countryId()) : null;
+        $publisher = $book->publisherId() !== null ? $this->publisherRepo->findById($book->publisherId()) : null;
+        $series = $book->seriesId() !== null ? $this->seriesRepo->findById($book->seriesId()) : null;
 
         $data = [
             'book' => $book,
             'title' => $title,
+            'country' => $country,
+            'publisher' => $publisher,
+            'series' => $series,
             'authorsById' => $authorsById
         ];
         $content = render('book/show', $data);
@@ -92,6 +104,9 @@ final class BookController
             'book' => null,
             'title' => $title,
             'authors' => $authors,
+            'countries' => $this->countryRepo->all(),
+            'publishers' => $this->publisherRepo->all(),
+            'series' => $this->seriesRepo->all(),
             'errors' => []
         ];
 
@@ -118,6 +133,10 @@ final class BookController
 
         $isbn = trim($_POST['isbn'] ?? '') ?: null;
 
+        $countryId = ($_POST['country_id'] ?? '') !== '' ? (int) $_POST['country_id'] : null;
+        $publisherId = ($_POST['publisher_id'] ?? '') !== '' ? (int) $_POST['publisher_id'] : null;
+        $seriesId = ($_POST['series_id'] ?? '') !== '' ? (int) $_POST['series_id'] : null;
+
         $errors = [];
 
         try {
@@ -129,6 +148,10 @@ final class BookController
                 pages: $pages,
                 printRun: $printRun,
                 isbn: $isbn,
+                countryId: $countryId,
+                publisherId: $publisherId,
+                seriesId: $seriesId,
+
                 authorIds: $authorIds
             );
         }catch (\InvalidArgumentException $e){
@@ -173,6 +196,9 @@ final class BookController
             'book' => $book,
             'title' => $title,
             'authors' => $authors,
+            'countries' => $this->countryRepo->all(),
+            'publishers' => $this->publisherRepo->all(),
+            'series' => $this->seriesRepo->all(),
             'errors' => []
         ];
 
@@ -218,6 +244,9 @@ final class BookController
             $book->changePages($pages);
             $book->changePrintRun($printRun);
             $book->changeIsbn($isbn);
+            $book->changeCountry($countryId);
+            $book->changePublisher($publisherId);
+            $book->changeSeries($seriesId);
 
             $authorIdsByBook = $book->authorIds();
 

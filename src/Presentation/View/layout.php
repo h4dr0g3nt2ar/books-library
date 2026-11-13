@@ -16,6 +16,9 @@
         <ul class="navbar-nav">
             <li class="nav-item"><a class="nav-link" href="/books">Книги</a></li>
             <li class="nav-item"><a class="nav-link" href="/authors">Авторы</a></li>
+            <li class="nav-item"><a class="nav-link" href="/publishers">Издательства</a></li>
+            <li class="nav-item"><a class="nav-link" href="/series">Книжные серии</a></li>
+            <li class="nav-item"><a class="nav-link" href="/countries">Страны</a></li>
         </ul>
     </div>
 </nav>

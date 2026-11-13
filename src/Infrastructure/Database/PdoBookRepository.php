@@ -54,6 +54,9 @@ final class PdoBookRepository implements BookRepositoryInterface
             pages: $row['pages'] !== null ? (int) $row['pages'] : null,
             printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
             isbn: $row['isbn'],
+            countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
+            publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
+            seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
             createdAt: new \DateTimeImmutable($row['created_at']),
             updatedAt: new \DateTimeImmutable($row['updated_at'])
         );
@@ -104,11 +107,106 @@ final class PdoBookRepository implements BookRepositoryInterface
                 pages: $row['pages'] !== null ? (int) $row['pages'] : null,
                 printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
                 isbn: $row['isbn'],
+                countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
+                publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
+                seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at']),
             );
         }
 
+        return $books;
+    }
+    public function findByPublisherId(int $publisherId): array{
+        $stmt = $this->pdo->prepare("SELECT * FROM books WHERE publisher_id = :publisher_id");
+        $stmt->execute(['publisher_id' => $publisher_id]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($rows === []) {
+            return [];
+        }
+        // Подгружаем ВСЕХ авторов для этих книг (как в all())
+        $bookIds = [];
+        foreach ($rows as $row) {
+            $bookIds[] = (int) $row['id'];
+        }
+        $placeholders = \implode(',', \array_fill(0, \count($bookIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, author_id FROM book_author WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $relations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $authorIdsByBook = [];
+        foreach ($relations as $relation) {
+            $authorIdsByBook[(int) $relation['book_id']][] = (int) $relation['author_id'];
+        }
+
+        $books = [];
+        foreach ($rows as $row) {
+            $books[] = Book::reconstitute(
+                id: $row['book_id'],
+                title: $row['title'],
+                year: (int) $row['year'],
+                description: $row['description'],
+                authorIds: $row['author_ids'],
+                binding: $row['binding'] !== null ? BindingType::from($row['binding']) : null,
+                pages: $row['pages'] !== null ? (int) $row['pages'] : null,
+                printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
+                isbn: $row['isbn'],
+                countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
+                publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
+                seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
+                createdAt: new \DateTimeImmutable($row['created_at']),
+                updatedAt: new \DateTimeImmutable($row['updated_at'])
+            );
+        }
+        return $books;
+    }
+    public function findBySeriesId(int $seriesId): array{
+        $stmt = $this->pdo->prepare("SELECT * FROM books WHERE series_id = :series_id");
+        $stmt->execute(['series_id' => $seriesId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($rows === []) {
+            return [];
+        }
+        // Подгружаем ВСЕХ авторов для этих книг (как в all())
+        $bookIds = [];
+        foreach ($rows as $row) {
+            $bookIds[] = (int) $row['id'];
+        }
+        $placeholders = \implode(',', \array_fill(0, \count($bookIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, author_id FROM book_author WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $relations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $authorIdsByBook = [];
+        foreach ($relations as $relation) {
+            $authorIdsByBook[(int) $relation['book_id']][] = (int) $relation['author_id'];
+        }
+
+        $books = [];
+        foreach ($rows as $row) {
+            $books[] = Book::reconstitute(
+                id: $row['book_id'],
+                title: $row['title'],
+                year: (int) $row['year'],
+                description: $row['description'],
+                authorIds: $row['author_ids'],
+                binding: $row['binding'] !== null ? BindingType::from($row['binding']) : null,
+                pages: $row['pages'] !== null ? (int) $row['pages'] : null,
+                printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
+                isbn: $row['isbn'],
+                countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
+                publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
+                seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
+                createdAt: new \DateTimeImmutable($row['created_at']),
+                updatedAt: new \DateTimeImmutable($row['updated_at'])
+            );
+        }
         return $books;
     }
 
@@ -155,6 +253,9 @@ final class PdoBookRepository implements BookRepositoryInterface
                 pages: $row['pages'] !== null ? (int) $row['pages'] : null,
                 printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
                 isbn: $row['isbn'],
+                countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
+                publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
+                seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
@@ -178,8 +279,8 @@ final class PdoBookRepository implements BookRepositoryInterface
     }
     private function insertBook(Book $book): void {
         $stmt = $this->pdo->prepare(
-            "INSERT INTO books (title, year, description, binding, pages, print_run, isbn, created_at, updated_at) 
-            VALUES (:title, :year, :description, :binding, :pages, :print_run, :isbn, :created_at, :updated_at)");
+            "INSERT INTO books (title, year, description, binding, pages, print_run, isbn, country_id, publisher_id, series_id, created_at, updated_at) 
+            VALUES (:title, :year, :description, :binding, :pages, :print_run, :isbn, :country_id, :publisher_id, :series_id, :created_at, :updated_at)");
         $stmt->execute(
             [
                 'title' => $book->title(),
@@ -189,6 +290,9 @@ final class PdoBookRepository implements BookRepositoryInterface
                 'pages' => $book->pages(),
                 'print_run' => $book->printRun(),
                 'isbn' => $book->isbn(),
+                'country_id' => $book->countryId(),
+                'publisher_id' => $book->publisherId(),
+                'series_id' => $book->seriesId(),
                 'created_at' => $book->createdAt()->format('Y-m-d H:i:s'),
                 'updated_at' => $book->updatedAt()->format('Y-m-d H:i:s')
             ]
@@ -198,7 +302,8 @@ final class PdoBookRepository implements BookRepositoryInterface
     }
     private function updateBook(Book $book): void {
         $stmt = $this->pdo->prepare(
-            "UPDATE books SET title = :title, year = :year, description = :description, binding = :binding, pages = :pages, print_run = :print_run, isbn = :isbn, updated_at = :updated_at
+            "UPDATE books SET title = :title, year = :year, description = :description, binding = :binding, pages = :pages, print_run = :print_run, isbn = :isbn,
+                 country_id = :country_id, publisher_id = :publisher_id, series_id = :series_id, updated_at = :updated_at
             WHERE id = :id
         ");
         $stmt->execute(
@@ -211,6 +316,9 @@ final class PdoBookRepository implements BookRepositoryInterface
                 'pages' => $book->pages(),
                 'print_run' => $book->printRun(),
                 'isbn' => $book->isbn(),
+                'country_id' => $book->countryId(),
+                'publisher_id' => $book->publisherId(),
+                'series_id' => $book->seriesId(),
                 'updated_at' => $book->updatedAt()->format('Y-m-d H:i:s')
             ]
         );
