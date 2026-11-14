@@ -2,7 +2,7 @@
     <h1><?= htmlspecialchars($publisher->name()) ?></h1>
     <div class="d-flex gap-2">
         <a href="/publishers/<?= $publisher->id() ?>/edit" class="btn btn-warning">Изменить</a>
-        <form method="post" action="/publishers/<?= $publisher->id() ?>/delete" class="d-inline" onsubmit="return confirm('Удалить издательство?')">
+        <form action="/publishers/<?= $publisher->id() ?>/delete" method="post" class="d-inline" onsubmit="return confirm('Удалить издательство?')">
             <button type="submit" class="btn btn-danger">Удалить</button>
         </form>
     </div>

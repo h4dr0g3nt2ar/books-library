@@ -12,11 +12,13 @@ use App\Infrastructure\Database\PdoAuthorRepository;
 use App\Infrastructure\Database\PdoCountryRepository;
 use App\Infrastructure\Database\PdoPublisherRepository;
 use App\Infrastructure\Database\PdoSeriesRepository;
+use App\Infrastructure\Database\PdoTranslatorRepository;
 use App\Presentation\Controller\BookController;
 use App\Presentation\Controller\AuthorController;
 use App\Presentation\Controller\CountryController;
 use App\Presentation\Controller\PublisherController;
 use App\Presentation\Controller\SeriesController;
+use App\Presentation\Controller\TranslatorController;
 use App\Presentation\Router;
 
 $pdo = new \PDO(
@@ -34,12 +36,14 @@ $authorRepo = new PdoAuthorRepository($pdo);
 $countryRepo = new PdoCountryRepository($pdo);
 $publisherRepo = new PdoPublisherRepository($pdo);
 $seriesRepo = new PdoSeriesRepository($pdo);
+$translatorRepo = new PdoTranslatorRepository($pdo);
 
-$bookController = new BookController($bookRepo, $authorRepo, $countryRepo, $publisherRepo, $seriesRepo);
+$bookController = new BookController($bookRepo, $authorRepo, $countryRepo, $publisherRepo, $seriesRepo, $translatorRepo);
 $authorController = new AuthorController($bookRepo, $authorRepo);
 $countryController = new CountryController($countryRepo);
 $publisherController = new PublisherController($publisherRepo, $bookRepo, $authorRepo);
 $seriesController = new SeriesController($seriesRepo, $bookRepo, $authorRepo);
+$translatorController = new TranslatorController($translatorRepo, $bookRepo, $authorRepo);
 
 $router = new Router();
 
@@ -97,7 +101,6 @@ $router->get('/authors/{id}', function ($id) use ($authorController) {
     $authorController->show((int) $id);
 });
 
-
 //страны
 
 $router->get('/countries', function() use($countryController){
@@ -118,7 +121,6 @@ $router->post('/countries/{id}', function($id) use ($countryController){
 $router->post('/countries/{id}/delete', function($id) use ($countryController){
     $countryController->delete((int) $id);
 });
-
 
 //издательства
 
@@ -166,6 +168,30 @@ $router->get('/publishers/{id}', function ($id) use ($publisherController) {
 });
 $router->get('/series/{id}', function ($id) use ($seriesController) {
     $seriesController->show((int) $id);
+});
+
+//переводчики
+
+$router->get('/translators', function () use ($translatorController) {
+    $translatorController->index();
+});
+$router->get('/translators/create', function () use ($translatorController) {
+    $translatorController->create();
+});
+$router->post('/translators', function () use ($translatorController) {
+    $translatorController->store();
+});
+$router->get('/translators/{id}/edit', function ($id) use ($translatorController) {
+    $translatorController->edit((int) $id);
+});
+$router->post('/translators/{id}', function ($id) use ($translatorController) {
+    $translatorController->update((int) $id);
+});
+$router->post('/translators/{id}/delete', function ($id) use ($translatorController) {
+    $translatorController->delete((int) $id);
+});
+$router->get('/translators/{id}', function ($id) use ($translatorController) {
+    $translatorController->show((int) $id);
 });
 
 $router->run($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

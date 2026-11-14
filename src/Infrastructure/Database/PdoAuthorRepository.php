@@ -44,6 +44,7 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
         if($ids ===[]){
             return [];
         }
+        $ids = \array_values($ids);
 
         $placeholders = \implode(',', \array_fill(0, \count($ids), '?'));
 

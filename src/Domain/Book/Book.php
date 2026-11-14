@@ -24,6 +24,8 @@ final class Book
         private ?int $publisherId,
         private ?int $seriesId,
 
+        private array $translatorIds,
+
         private \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt
     ) {
@@ -37,20 +39,26 @@ final class Book
         self::validateCountryId($countryId);
         self::validatePublisherId($publisherId);
         self::validateSeriesId($seriesId);
+        self::validateTranslatorIds($translatorIds);
 
     }
     public static function create(
         string $title,
         int $year,
         ?string $description = null,
+
         array $authorIds = [],
+
         ?BindingType $binding = null,
         ?int $pages = null,
         ?int $printRun = null,
         ?string $isbn = null,
+
         ?int $countryId = null,
         ?int $publisherId = null,
         ?int $seriesId = null,
+
+        array $translatorIds= [],
     ): self{
 
         $now = new \DateTimeImmutable();
@@ -72,6 +80,8 @@ final class Book
             publisherId: $publisherId,
             seriesId: $seriesId,
 
+            translatorIds: $translatorIds,
+
             createdAt: $now,
             updatedAt: $now
         );
@@ -81,14 +91,20 @@ final class Book
         string $title,
         int $year,
         ?string $description,
+
         array $authorIds,
+
         ?BindingType $binding,
         ?int $pages,
         ?int $printRun,
         ?string $isbn,
+
         ?int $countryId,
         ?int $publisherId,
         ?int $seriesId,
+
+        array $translatorIds,
+
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt
     ): self{
@@ -108,6 +124,8 @@ final class Book
             countryId: $countryId,
             publisherId: $publisherId,
             seriesId: $seriesId,
+
+            translatorIds: $translatorIds,
 
             createdAt: $createdAt,
             updatedAt: $updatedAt
@@ -217,6 +235,26 @@ final class Book
         }
     }
 
+    private function validateTranslatorIds(array $translatorIds): void{
+        foreach($translatorIds as $translatorId){
+            if(!\is_int($translatorId)){
+                throw new \InvalidArgumentException(
+                    'Each author ID must be an integer'
+                );
+            }
+            if($translatorId <= 0){
+                throw new \InvalidArgumentException(
+                    'Translator id must be positive. You tried to fill: ' . $translatorId
+                );
+            }
+        }
+        if(\count($translatorIds) !== \count(array_unique($translatorIds))){
+            throw new \InvalidArgumentException(
+                'Duplicate translator Ids'
+            );
+        }
+    }
+
     public function id(): int{
         return $this->id;
     }
@@ -252,6 +290,9 @@ final class Book
     }
     public function seriesId(): ?int{
         return $this->seriesId;
+    }
+    public function translatorIds(): array{
+        return $this->translatorIds;
     }
     public function createdAt(): \DateTimeImmutable{
         return $this->createdAt;
@@ -343,6 +384,35 @@ final class Book
     }
     public function hasAuthor(int $authorId): bool{
         return \in_array($authorId, $this->authorIds, true);
+    }
+
+    public function addTranslator(int $translatorId): void{
+        if($translatorId <= 0){
+            throw new \InvalidArgumentException('Translator ID must be positive');
+        }
+        if (!$this->hasTranslator($translatorId)) {
+            $this->translatorIds[] = $translatorId;
+        }else{
+            throw new \InvalidArgumentException('Translator is already added');
+        }
+
+        $this->updatedAt = new \DateTimeImmutable();
+
+    }
+    public function removeTranslator(int $translatorId): void{
+
+        $removingTranslatorKey = array_search($translatorId, $this->translatorIds);
+
+        if($removingTranslatorKey !== false){
+            unset($this->translatorIds[$removingAuthorKey]);
+            $this->updatedAt= new \DateTimeImmutable();
+        }
+        $this->translatorIds = \array_values($this->translatorIds);
+
+
+    }
+    public function hasTranslator(int $translatorId): bool{
+        return \in_array($translatorId, $this->translatorIds, true);
     }
 
     public function assignId(int $id): void{

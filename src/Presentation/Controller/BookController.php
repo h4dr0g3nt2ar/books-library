@@ -12,6 +12,7 @@ use App\Domain\Book\Enum\BindingType;
 use App\Infrastructure\Database\PdoCountryRepository;
 use App\Infrastructure\Database\PdoPublisherRepository;
 use App\Infrastructure\Database\PdoSeriesRepository;
+use App\Infrastructure\Database\PdoTranslatorRepository;
 
 final class BookController
 {
@@ -22,6 +23,7 @@ final class BookController
         public readonly PdoCountryRepository $countryRepo,
         public readonly PdoPublisherRepository $publisherRepo,
         public readonly PdoSeriesRepository $seriesRepo,
+        public readonly PdoTranslatorRepository $translatorRepo,
     ){
     }
     public function index():void {
@@ -106,6 +108,7 @@ final class BookController
             'authors' => $authors,
             'countries' => $this->countryRepo->all(),
             'publishers' => $this->publisherRepo->all(),
+            'translators' => $this->translatorRepo->all(),
             'series' => $this->seriesRepo->all(),
             'errors' => []
         ];
@@ -160,12 +163,14 @@ final class BookController
         if ($errors !== []) {
 
             $authors = $this->authorRepo->all();
+            $translators = $this->translatorRepo->all();
             $title = 'Добавить книгу';
 
             $data = [
                 'book' => null,
                 'title' => $title,
                 'authors' => $authors,
+                'translators' => $translators,
                 'errors' => $errors,
                 'old' => $_POST,
             ];
@@ -198,6 +203,7 @@ final class BookController
             'authors' => $authors,
             'countries' => $this->countryRepo->all(),
             'publishers' => $this->publisherRepo->all(),
+            'translators' => $this->translatorRepo->all(),
             'series' => $this->seriesRepo->all(),
             'errors' => []
         ];
@@ -273,6 +279,7 @@ final class BookController
                 'book' => $book,
                 'title' => $title,
                 'authors' => $this->authorRepo->all(),
+                'translators' => $this->translatorRepo->all(),
                 'errors' => $errors,
                 'old' => $_POST,
             ];

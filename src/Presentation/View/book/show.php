@@ -10,7 +10,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-
+        <!-- Авторы -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Авторы:</div>
             <div class="col-sm-9">
@@ -26,10 +26,71 @@
             </div>
         </div>
 
+        <!-- Переводчики -->
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Переводчики:</div>
+            <div class="col-sm-9">
+                <?php
+                $translatorNames = [];
+                foreach ($book->translatorIds() as $translatorId) {
+                    if (isset($translatorsById[$translatorId])) {
+                        $translatorNames[] = htmlspecialchars($translatorsById[$translatorId]->name());
+                    }
+                }
+                echo $translatorNames === [] ? '—' : implode(', ', $translatorNames);
+                ?>
+            </div>
+        </div>
+
+        <!-- Год издания -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Год издания:</div>
             <div class="col-sm-9"><?= $book->year() ?></div>
         </div>
+
+        <!-- Страна -->
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Страна:</div>
+            <div class="col-sm-9"><?= $country !== null ? htmlspecialchars($country->name()) : '—' ?></div>
+        </div>
+
+        <!-- Издательство -->
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Издательство:</div>
+            <div class="col-sm-9"><?= $publisher !== null ? htmlspecialchars($publisher->name()) : '—' ?></div>
+        </div>
+
+        <!-- Серия -->
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Серия:</div>
+            <div class="col-sm-9"><?= $series !== null ? htmlspecialchars($series->name()) : '—' ?></div>
+        </div>
+
+        <!-- Переплёт -->
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Переплёт:</div>
+            <div class="col-sm-9"><?= $book->binding()?->label() ?? '—' ?></div>
+        </div>
+
+        <!-- Страниц -->
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Страниц:</div>
+            <div class="col-sm-9"><?= $book->pages() ?? '—' ?></div>
+        </div>
+
+        <!-- Тираж -->
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Тираж:</div>
+            <div class="col-sm-9"><?= $book->printRun() ?? '—' ?></div>
+        </div>
+
+        <!-- ISBN -->
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">ISBN:</div>
+            <div class="col-sm-9"><?= htmlspecialchars($book->isbn() ?? '—') ?></div>
+        </div>
+
+        <!-- Описание -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Описание:</div>
             <div class="col-sm-9">
@@ -40,28 +101,6 @@
                 <?php endif; ?>
             </div>
         </div>
-
-        <div class="row mb-3">
-            <div class="col-sm-3 text-muted">Переплёт:</div>
-            <div class="col-sm-9"><?= $book->binding()?->label() ?? '—' ?></div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-sm-3 text-muted">Страниц:</div>
-            <div class="col-sm-9"><?= $book->pages() ?? '—' ?></div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-sm-3 text-muted">Тираж:</div>
-            <div class="col-sm-9"><?= $book->printRun() ?? '—' ?></div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-sm-3 text-muted">ISBN:</div>
-            <div class="col-sm-9"><?= htmlspecialchars($book->isbn() ?? '—') ?></div>
-        </div>
-
-
 
         <hr>
 

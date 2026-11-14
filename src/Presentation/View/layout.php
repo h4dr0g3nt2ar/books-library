@@ -18,6 +18,7 @@
             <li class="nav-item"><a class="nav-link" href="/authors">Авторы</a></li>
             <li class="nav-item"><a class="nav-link" href="/publishers">Издательства</a></li>
             <li class="nav-item"><a class="nav-link" href="/series">Книжные серии</a></li>
+            <li class="nav-item"><a class="nav-link" href="/translators">Переводчики</a></li>
             <li class="nav-item"><a class="nav-link" href="/countries">Страны</a></li>
         </ul>
     </div>
@@ -43,11 +44,15 @@
             placeholder: 'Начните вводить имя автора...',
             allowClear: true,
             width: '100%',
-            language: {
-                noResults: function() {
-                    return "Ничего не найдено";
-                }
-            }
+            language: { noResults: function() { return "Ничего не найдено"; } }
+        });
+
+        $('#translators').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Начните вводить имя переводчика...',
+            allowClear: true,
+            width: '100%',
+            language: { noResults: function() { return "Ничего не найдено"; } }
         });
     });
 </script>

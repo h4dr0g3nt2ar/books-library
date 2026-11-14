@@ -44,6 +44,11 @@ final class PdoBookRepository implements BookRepositoryInterface
         $authorIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         $authorIds = \array_map('intval', $authorIds);
 
+        $stmt = $this->pdo->prepare('SELECT translator_id FROM book_translator WHERE book_id = :id');
+        $stmt->execute(['id' => $id]);
+        $translatorIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $translatorIds = \array_map('intval', $translatorIds);
+
         $book =  Book::reconstitute(
             id: (int)$row['id'],
             title: $row['title'],
@@ -57,6 +62,7 @@ final class PdoBookRepository implements BookRepositoryInterface
             countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
             publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
             seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
+            translatorIds: $translatorIds,
             createdAt: new \DateTimeImmutable($row['created_at']),
             updatedAt: new \DateTimeImmutable($row['updated_at'])
         );
@@ -77,7 +83,7 @@ final class PdoBookRepository implements BookRepositoryInterface
             return [];
         }
 
-        // Подгружаем ВСЕХ авторов для этих книг (как в all())
+        // Подгружаем ВСЕХ авторов для этих книг
         $bookIds = [];
         foreach ($rows as $row) {
             $bookIds[] = (int) $row['id'];
@@ -93,6 +99,19 @@ final class PdoBookRepository implements BookRepositoryInterface
         foreach ($relations as $relation) {
             $authorIdsByBook[(int) $relation['book_id']][] = (int) $relation['author_id'];
         }
+        // Подгружаем ВСЕХ переводчиков для этих книг
+
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, translator_id FROM book_translator WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $translatorRelations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $translatorIdsByBook = [];
+        foreach ($translatorRelations as $relation) {
+            $translatorIdsByBook[(int) $relation['book_id']][] = (int) $relation['translator_id'];
+        }
+
 
         $books = [];
         foreach ($rows as $row) {
@@ -110,6 +129,7 @@ final class PdoBookRepository implements BookRepositoryInterface
                 countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
                 publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
                 seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
+                translatorIds: $translatorIdsByBook[$bookId] ?? [],
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at']),
             );
@@ -119,13 +139,13 @@ final class PdoBookRepository implements BookRepositoryInterface
     }
     public function findByPublisherId(int $publisherId): array{
         $stmt = $this->pdo->prepare("SELECT * FROM books WHERE publisher_id = :publisher_id");
-        $stmt->execute(['publisher_id' => $publisher_id]);
+        $stmt->execute(['publisher_id' => $publisherId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         if ($rows === []) {
             return [];
         }
-        // Подгружаем ВСЕХ авторов для этих книг (как в all())
+        // Подгружаем ВСЕХ авторов для этих книг
         $bookIds = [];
         foreach ($rows as $row) {
             $bookIds[] = (int) $row['id'];
@@ -140,6 +160,19 @@ final class PdoBookRepository implements BookRepositoryInterface
         $authorIdsByBook = [];
         foreach ($relations as $relation) {
             $authorIdsByBook[(int) $relation['book_id']][] = (int) $relation['author_id'];
+        }
+
+        // Подгружаем ВСЕХ переводчиков для этих книг
+
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, translator_id FROM book_translator WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $translatorRelations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $translatorIdsByBook = [];
+        foreach ($translatorRelations as $relation) {
+            $translatorIdsByBook[(int) $relation['book_id']][] = (int) $relation['translator_id'];
         }
 
         $books = [];
@@ -157,6 +190,7 @@ final class PdoBookRepository implements BookRepositoryInterface
                 countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
                 publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
                 seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
+                translatorIds: $translatorIdsByBook[$bookId] ?? [],
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
@@ -188,6 +222,19 @@ final class PdoBookRepository implements BookRepositoryInterface
             $authorIdsByBook[(int) $relation['book_id']][] = (int) $relation['author_id'];
         }
 
+        // Подгружаем ВСЕХ переводчиков для этих книг
+
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, translator_id FROM book_translator WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $translatorRelations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $translatorIdsByBook = [];
+        foreach ($translatorRelations as $relation) {
+            $translatorIdsByBook[(int) $relation['book_id']][] = (int) $relation['translator_id'];
+        }
+
         $books = [];
         foreach ($rows as $row) {
             $books[] = Book::reconstitute(
@@ -203,10 +250,81 @@ final class PdoBookRepository implements BookRepositoryInterface
                 countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
                 publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
                 seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
+                translatorIds: $translatorIdsByBook[$bookId] ?? [],
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
         }
+        return $books;
+    }
+
+    public function findByTranslatorId(int $translatorId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT b.* FROM books b
+         JOIN book_translator ba ON ba.book_id = b.id
+         WHERE ba.translator_id = :translator_id
+         ORDER BY b.year ASC'
+        );
+        $stmt->execute(['translator_id' => $translatorId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($rows === []) {
+            return [];
+        }
+
+        // Подгружаем ВСЕХ авторов для этих книг
+        $bookIds = [];
+        foreach ($rows as $row) {
+            $bookIds[] = (int) $row['id'];
+        }
+        $placeholders = \implode(',', \array_fill(0, \count($bookIds), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, author_id FROM book_author WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $relations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $authorIdsByBook = [];
+        foreach ($relations as $relation) {
+            $authorIdsByBook[(int) $relation['book_id']][] = (int) $relation['author_id'];
+        }
+        // Подгружаем ВСЕХ переводчиков для этих книг
+
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, translator_id FROM book_translator WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $translatorRelations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $translatorIdsByBook = [];
+        foreach ($translatorRelations as $relation) {
+            $translatorIdsByBook[(int) $relation['book_id']][] = (int) $relation['translator_id'];
+        }
+
+
+        $books = [];
+        foreach ($rows as $row) {
+            $bookId = (int) $row['id'];
+            $books[] = Book::reconstitute(
+                id: $bookId,
+                title: $row['title'],
+                year: (int) $row['year'],
+                description: $row['description'],
+                authorIds: $authorIdsByBook[$bookId] ?? [],
+                binding: $row['binding'] !== null ? BindingType::from($row['binding']) : null,
+                pages: $row['pages'] !== null ? (int) $row['pages'] : null,
+                printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
+                isbn: $row['isbn'],
+                countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
+                publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
+                seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
+                translatorIds: $translatorIdsByBook[$bookId] ?? [],
+                createdAt: new \DateTimeImmutable($row['created_at']),
+                updatedAt: new \DateTimeImmutable($row['updated_at']),
+            );
+        }
+
         return $books;
     }
 
@@ -237,6 +355,19 @@ final class PdoBookRepository implements BookRepositoryInterface
             $authorIdsByBook[(int)$relation['book_id']][] = (int)$relation['author_id'];
         }
 
+        // Подгружаем ВСЕХ переводчиков для этих книг
+
+        $stmt = $this->pdo->prepare(
+            "SELECT book_id, translator_id FROM book_translator WHERE book_id IN ($placeholders)"
+        );
+        $stmt->execute($bookIds);
+        $translatorRelations = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $translatorIdsByBook = [];
+        foreach ($translatorRelations as $relation) {
+            $translatorIdsByBook[(int) $relation['book_id']][] = (int) $relation['translator_id'];
+        }
+
         $books = [];
 
         foreach($rows as $row){
@@ -256,6 +387,9 @@ final class PdoBookRepository implements BookRepositoryInterface
                 countryId: $row['country_id'] !== null ? (int) $row['country_id']: null,
                 publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id']: null,
                 seriesId: $row['series_id'] !== null ? (int) $row['series_id']: null,
+
+                translatorIds: $translatorIdsByBook[$bookId] ?? [],
+
                 createdAt: new \DateTimeImmutable($row['created_at']),
                 updatedAt: new \DateTimeImmutable($row['updated_at'])
             );
