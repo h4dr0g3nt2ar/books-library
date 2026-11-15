@@ -140,6 +140,9 @@ final class BookController
         $publisherId = ($_POST['publisher_id'] ?? '') !== '' ? (int) $_POST['publisher_id'] : null;
         $seriesId = ($_POST['series_id'] ?? '') !== '' ? (int) $_POST['series_id'] : null;
 
+        $translatorIds = array_map('intval', $_POST['translatorIds'] ?? []);
+
+
         $errors = [];
 
         try {
@@ -155,7 +158,9 @@ final class BookController
                 publisherId: $publisherId,
                 seriesId: $seriesId,
 
-                authorIds: $authorIds
+                authorIds: $authorIds,
+
+                translatorIds: $translatorIds
             );
         }catch (\InvalidArgumentException $e){
             $errors[] = $e->getMessage();
@@ -226,6 +231,8 @@ final class BookController
         $title = $_POST['title'] ?? '';
         $year = (int) ($_POST['year'] ?? 0);
         $authorIds = array_map('intval', $_POST['authorIds'] ?? []);
+        $translatorIds = array_map('intval', $_POST['translatorIds'] ?? []);
+
 
         $description = trim($_POST['description'] ?? '') ?: null;
 
@@ -239,6 +246,10 @@ final class BookController
         $printRun = $printRunStr !== '' ? (int) $printRunStr : null;
 
         $isbn = trim($_POST['isbn'] ?? '') ?: null;
+
+        $countryId   = ($_POST['country_id'] ?? '') !== '' ? (int) $_POST['country_id'] : null;
+        $publisherId = ($_POST['publisher_id'] ?? '') !== '' ? (int) $_POST['publisher_id'] : null;
+        $seriesId    = ($_POST['series_id'] ?? '') !== '' ? (int) $_POST['series_id'] : null;
 
         $errors = [];
 
@@ -254,6 +265,7 @@ final class BookController
             $book->changePublisher($publisherId);
             $book->changeSeries($seriesId);
 
+
             $authorIdsByBook = $book->authorIds();
 
             foreach($authorIds as $authorId){
@@ -265,6 +277,20 @@ final class BookController
             foreach ($authorIdsByBook as $authorIdByBook) {
                 if(!in_array($authorIdByBook, $authorIds)){
                     $book->removeAuthor($authorIdByBook);
+                }
+            }
+
+            $translatorIdsByBook = $book->translatorIds();
+
+            foreach($translatorIds as $translatorId){
+                if(!in_array($translatorId, $translatorIdsByBook)){
+                    $book->addTranslator($translatorId);
+                }
+            }
+
+            foreach ($translatorIdsByBook as $translatorIdByBook) {
+                if(!in_array($translatorIdByBook, $translatorIds)){
+                    $book->removeTranslator($translatorIdByBook);
                 }
             }
 

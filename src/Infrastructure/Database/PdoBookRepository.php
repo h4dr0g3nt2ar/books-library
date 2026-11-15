@@ -22,6 +22,7 @@ final class PdoBookRepository implements BookRepositoryInterface
                 $this->updateBook($book);
             }
             $this->syncAuthors($book);
+            $this->syncTranslators($book);
 
             $this->pdo->commit();
         }catch(\Throwable $e){
@@ -471,5 +472,20 @@ final class PdoBookRepository implements BookRepositoryInterface
             $stmt->execute(['book_id' => $book->id(), 'author_id' => $authorId]);
         }
     }
+    private function syncTranslators(Book $book): void {
+
+        if ($book->translatorIds() === []) {
+            return;
+        }
+
+        $stmt = $this->pdo->prepare("DELETE FROM book_translator WHERE book_id = :book_id");
+        $stmt->execute(['book_id' => $book->id()]);
+
+        $stmt= $this->pdo->prepare('INSERT INTO book_translator (book_id, translator_id) VALUES (:book_id, :translator_id)');
+        foreach($book->translatorIds() as $translatorId){
+            $stmt->execute(['book_id' => $book->id(), 'translator_id' => $translatorId]);
+        }
+    }
+
 
 }

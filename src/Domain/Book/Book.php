@@ -404,7 +404,7 @@ final class Book
         $removingTranslatorKey = array_search($translatorId, $this->translatorIds);
 
         if($removingTranslatorKey !== false){
-            unset($this->translatorIds[$removingAuthorKey]);
+            unset($this->translatorIds[$removingTranslatorKey]);
             $this->updatedAt= new \DateTimeImmutable();
         }
         $this->translatorIds = \array_values($this->translatorIds);

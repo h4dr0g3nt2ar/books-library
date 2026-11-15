@@ -31,13 +31,13 @@
             <div class="col-sm-3 text-muted">Переводчики:</div>
             <div class="col-sm-9">
                 <?php
-                $translatorNames = [];
+                $names = [];
                 foreach ($book->translatorIds() as $translatorId) {
                     if (isset($translatorsById[$translatorId])) {
-                        $translatorNames[] = htmlspecialchars($translatorsById[$translatorId]->name());
+                        $names[] = htmlspecialchars($translatorsById[$translatorId]->name());
                     }
                 }
-                echo $translatorNames === [] ? '—' : implode(', ', $translatorNames);
+                echo $names === [] ? '—' : implode(', ', $names);
                 ?>
             </div>
         </div>
