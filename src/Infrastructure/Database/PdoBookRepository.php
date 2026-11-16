@@ -59,13 +59,13 @@ final class PdoBookRepository implements BookRepositoryInterface
         array $authorIds = [],
         array $translatorIds = [],
         array $tagIds = [],
-    ): Book{
+    ): Book {
         return Book::reconstitute(
             id: (int) $row['id'],
             title: $row['title'],
             year: (int) $row['year'],
             description: $row['description'],
-            authorIds: $authorIds,
+            authorIds: \array_map('intval', $authorIds),
             binding: $row['binding'] !== null ? BindingType::from($row['binding']) : null,
             pages: $row['pages'] !== null ? (int) $row['pages'] : null,
             printRun: $row['print_run'] !== null ? (int) $row['print_run'] : null,
@@ -73,10 +73,10 @@ final class PdoBookRepository implements BookRepositoryInterface
             countryId: $row['country_id'] !== null ? (int) $row['country_id'] : null,
             publisherId: $row['publisher_id'] !== null ? (int) $row['publisher_id'] : null,
             seriesId: $row['series_id'] !== null ? (int) $row['series_id'] : null,
-            translatorIds: $translatorIds,
-            tagIds: $tagIds,
+            translatorIds: \array_map('intval', $translatorIds),
+            tagIds: \array_map('intval', $tagIds),
             createdAt: new \DateTimeImmutable($row['created_at']),
-            updatedAt: new \DateTimeImmutable($row['updated_at'])
+            updatedAt: new \DateTimeImmutable($row['updated_at']),
         );
     }
     private function findByJoin(string $sql, array $params): array
@@ -109,20 +109,26 @@ final class PdoBookRepository implements BookRepositoryInterface
     }
     public function findById(int $id): ?Book
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM books WHERE id = :id");
-        $stmt->execute(['id'=>$id]);
+        $stmt = $this->pdo->prepare('SELECT * FROM books WHERE id = :id');
+        $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if($row === false){
+        if ($row === false) {
             return null;
         }
+
         $bookIds = [$id];
 
-        $authorIds = $this->loadRelatedIds('book_author', 'author_id', $bookIds) ?? [];
-        $translatorIds = $this->loadRelatedIds('book_translator', 'translator_id', $bookIds) ?? [];
-        $tagIds = $this->loadRelatedIds('book_tag', 'tag_id', $bookIds) ?? [];
+        $authorsByBook     = $this->loadRelatedIds('book_author', 'author_id', $bookIds);
+        $translatorsByBook = $this->loadRelatedIds('book_translator', 'translator_id', $bookIds);
+        $tagsByBook        = $this->loadRelatedIds('book_tag', 'tag_id', $bookIds);
 
-        return $this->bookFromRow($row, $authorIds, $translatorIds, $tagIds);
+        return $this->bookFromRow(
+            $row,
+            $authorsByBook[$id] ?? [],
+            $translatorsByBook[$id] ?? [],
+            $tagsByBook[$id] ?? [],
+        );
     }
     public function findByAuthorId(int $authorId): array
     {
