@@ -41,7 +41,7 @@ final class TranslatorController
 
         $allAuthorIds = [];
         foreach ($books as $book) {
-            $allAuthorIds[] = $book->getAuthorId();
+            $allAuthorIds = array_merge($allAuthorIds, $book->authorIds());
         }
         $allAuthorIds = array_unique($allAuthorIds);
         $authors = $allAuthorIds === [] ? [] : $this->authorRepo->findByIds($allAuthorIds);

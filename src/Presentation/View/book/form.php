@@ -149,6 +149,26 @@
         <div class="form-text">Удерживайте Ctrl (Cmd), чтобы выбрать нескольких переводчиков.</div>
     </div>
 
+    <div class="mb-3">
+        <label for="tags" class="form-label">Теги</label>
+        <select name="tagIds[]" id="tags" class="form-select" multiple>
+            <?php foreach ($tags as $tag): ?>
+                <?php
+                $isSelected = false;
+                if ($book !== null) {
+                    $isSelected = in_array($tag->id(), $book->tagIds(), true);
+                } elseif (isset($old['tagIds'])) {
+                    $isSelected = in_array($tag->id(), array_map('intval', $old['tagIds']), true);
+                }
+                ?>
+                <option value="<?= $tag->id() ?>" <?= $isSelected ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($tag->name()) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <div class="form-text">Удерживайте Ctrl (Cmd) для выбора нескольких.</div>
+    </div>
+
     <button type="submit" class="btn btn-primary">Сохранить</button>
     <a href="/books" class="btn btn-outline-secondary">Отмена</a>
 </form>

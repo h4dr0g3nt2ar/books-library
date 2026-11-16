@@ -41,7 +41,7 @@ final class PublisherController
 
         $allAuthorIds = [];
         foreach ($books as $book) {
-            $allAuthorIds[] = $book->getAuthorId();
+            $allAuthorIds[] = $book->authorIds();
         }
         $allAuthorIds = array_unique($allAuthorIds);
         $authors = $allAuthorIds === [] ? [] : $this->authorRepo->findByIds($allAuthorIds);

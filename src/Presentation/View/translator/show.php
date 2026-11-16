@@ -22,7 +22,7 @@
         </div>
 
         <div class="row mb-3">
-            <div class="col-sm-3 text-muted">Книги,которые переводил переводчик:</div>
+            <div class="col-sm-3 text-muted">Книги, которые переводил переводчик:</div>
             <div class="col-sm-9">
                 <?php if ($books === []): ?>
                     <em class="text-muted">Нет книг</em>

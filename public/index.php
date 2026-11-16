@@ -13,12 +13,16 @@ use App\Infrastructure\Database\PdoCountryRepository;
 use App\Infrastructure\Database\PdoPublisherRepository;
 use App\Infrastructure\Database\PdoSeriesRepository;
 use App\Infrastructure\Database\PdoTranslatorRepository;
+use App\Infrastructure\Database\PdoTagRepository;
+
 use App\Presentation\Controller\BookController;
 use App\Presentation\Controller\AuthorController;
 use App\Presentation\Controller\CountryController;
 use App\Presentation\Controller\PublisherController;
 use App\Presentation\Controller\SeriesController;
 use App\Presentation\Controller\TranslatorController;
+use App\Presentation\Controller\TagController;
+
 use App\Presentation\Router;
 
 $pdo = new \PDO(
@@ -37,13 +41,15 @@ $countryRepo = new PdoCountryRepository($pdo);
 $publisherRepo = new PdoPublisherRepository($pdo);
 $seriesRepo = new PdoSeriesRepository($pdo);
 $translatorRepo = new PdoTranslatorRepository($pdo);
+$tagRepo = new PdoTagRepository($pdo);
 
-$bookController = new BookController($bookRepo, $authorRepo, $countryRepo, $publisherRepo, $seriesRepo, $translatorRepo);
+$bookController = new BookController($bookRepo, $authorRepo, $countryRepo, $publisherRepo, $seriesRepo, $translatorRepo, $tagRepo);
 $authorController = new AuthorController($bookRepo, $authorRepo);
 $countryController = new CountryController($countryRepo);
 $publisherController = new PublisherController($publisherRepo, $bookRepo, $authorRepo);
 $seriesController = new SeriesController($seriesRepo, $bookRepo, $authorRepo);
 $translatorController = new TranslatorController($translatorRepo, $bookRepo, $authorRepo);
+$tagController = new TagController($tagRepo, $bookRepo, $authorRepo);
 
 $router = new Router();
 
@@ -192,6 +198,30 @@ $router->post('/translators/{id}/delete', function ($id) use ($translatorControl
 });
 $router->get('/translators/{id}', function ($id) use ($translatorController) {
     $translatorController->show((int) $id);
+});
+
+//tags
+
+$router->get('/tags', function () use ($tagController) {
+    $tagController->index();
+});
+$router->get('/tags/create', function () use ($tagController) {
+    $tagController->create();
+});
+$router->post('/tags', function () use ($tagController) {
+    $tagController->store();
+});
+$router->get('/tags/{id}/edit', function ($id) use ($tagController) {
+    $tagController->edit((int) $id);
+});
+$router->post('/tags/{id}', function ($id) use ($tagController) {
+    $tagController->update((int) $id);
+});
+$router->post('/tags/{id}/delete', function ($id) use ($tagController) {
+    $tagController->delete((int) $id);
+});
+$router->get('/tags/{id}', function ($id) use ($tagController) {
+    $tagController->show((int) $id);
 });
 
 $router->run($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

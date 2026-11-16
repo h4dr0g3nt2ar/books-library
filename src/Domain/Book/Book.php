@@ -26,6 +26,8 @@ final class Book
 
         private array $translatorIds,
 
+        private array $tagIds,
+
         private \DateTimeImmutable $createdAt,
         private \DateTimeImmutable $updatedAt
     ) {
@@ -40,6 +42,7 @@ final class Book
         self::validatePublisherId($publisherId);
         self::validateSeriesId($seriesId);
         self::validateTranslatorIds($translatorIds);
+        self::validateTagIds($tagIds);
 
     }
     public static function create(
@@ -59,6 +62,7 @@ final class Book
         ?int $seriesId = null,
 
         array $translatorIds= [],
+        array $tagIds = []
     ): self{
 
         $now = new \DateTimeImmutable();
@@ -81,6 +85,7 @@ final class Book
             seriesId: $seriesId,
 
             translatorIds: $translatorIds,
+            tagIds: $tagIds,
 
             createdAt: $now,
             updatedAt: $now
@@ -104,6 +109,7 @@ final class Book
         ?int $seriesId,
 
         array $translatorIds,
+        array $tagIds,
 
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt
@@ -126,6 +132,7 @@ final class Book
             seriesId: $seriesId,
 
             translatorIds: $translatorIds,
+            tagIds: $tagIds,
 
             createdAt: $createdAt,
             updatedAt: $updatedAt
@@ -239,7 +246,7 @@ final class Book
         foreach($translatorIds as $translatorId){
             if(!\is_int($translatorId)){
                 throw new \InvalidArgumentException(
-                    'Each author ID must be an integer'
+                    'Each translator ID must be an integer'
                 );
             }
             if($translatorId <= 0){
@@ -251,6 +258,25 @@ final class Book
         if(\count($translatorIds) !== \count(array_unique($translatorIds))){
             throw new \InvalidArgumentException(
                 'Duplicate translator Ids'
+            );
+        }
+    }
+    private function validateTagIds(array $tagIds): void{
+        foreach($tagIds as $tagId){
+            if(!\is_int($tagId)){
+                throw new \InvalidArgumentException(
+                    'Each tag ID must be an integer'
+                );
+            }
+            if($tagId <= 0){
+                throw new \InvalidArgumentException(
+                    'Tag id must be positive. You tried to fill: ' . $tagId
+                );
+            }
+        }
+        if(\count($tagIds) !== \count(array_unique($tagIds))){
+            throw new \InvalidArgumentException(
+                'Duplicate tag Ids'
             );
         }
     }
@@ -293,6 +319,9 @@ final class Book
     }
     public function translatorIds(): array{
         return $this->translatorIds;
+    }
+    public function tagIds(): array{
+        return $this->tagIds;
     }
     public function createdAt(): \DateTimeImmutable{
         return $this->createdAt;
@@ -393,7 +422,7 @@ final class Book
         if (!$this->hasTranslator($translatorId)) {
             $this->translatorIds[] = $translatorId;
         }else{
-            throw new \InvalidArgumentException('Translator is already added');
+            return;
         }
 
         $this->updatedAt = new \DateTimeImmutable();
@@ -413,6 +442,34 @@ final class Book
     }
     public function hasTranslator(int $translatorId): bool{
         return \in_array($translatorId, $this->translatorIds, true);
+    }
+    public function addTag(int $tagId): void{
+        if($tagId <= 0){
+            throw new \InvalidArgumentException('Tag ID must be positive');
+        }
+        if (!$this->hasTag($tagId)) {
+            $this->tagIds[] = $tagId;
+        }else{
+            return;
+        }
+
+        $this->updatedAt = new \DateTimeImmutable();
+
+    }
+    public function removeTag(int $tagId): void{
+
+        $removingTagKey = array_search($tagId, $this->tagIds);
+
+        if($removingTagKey !== false){
+            unset($this->tagIds[$removingTagKey]);
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+        $this->tagIds = \array_values($this->tagIds);
+
+
+    }
+    public function hasTag(int $tagId): bool{
+        return \in_array($tagId, $this->tagIds, true);
     }
 
     public function assignId(int $id): void{

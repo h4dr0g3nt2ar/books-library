@@ -19,6 +19,7 @@
             <li class="nav-item"><a class="nav-link" href="/publishers">Издательства</a></li>
             <li class="nav-item"><a class="nav-link" href="/series">Книжные серии</a></li>
             <li class="nav-item"><a class="nav-link" href="/translators">Переводчики</a></li>
+            <li class="nav-item"><a class="nav-link" href="/tags">Теги</a></li>
             <li class="nav-item"><a class="nav-link" href="/countries">Страны</a></li>
         </ul>
     </div>
@@ -54,8 +55,22 @@
             width: '100%',
             language: { noResults: function() { return "Ничего не найдено"; } }
         });
+        $('#tags').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Начните вводить название тега...',
+            allowClear: true,
+            width: '100%',
+            language: { noResults: function() { return "Ничего не найдено"; } }
+        });
     });
 </script>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (el) {
+            new bootstrap.Tooltip(el);
+        });
+    });
+</script>
 </body>
 </html>

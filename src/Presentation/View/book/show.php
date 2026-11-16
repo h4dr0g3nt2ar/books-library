@@ -41,7 +41,29 @@
                 ?>
             </div>
         </div>
-
+        <div class="row mb-3">
+            <div class="col-sm-3 text-muted">Теги:</div>
+            <div class="col-sm-9">
+                <?php if ($book->tagIds() === []): ?>
+                    —
+                <?php else: ?>
+                    <?php foreach ($book->tagIds() as $tagId): ?>
+                        <?php if (isset($tagsById[$tagId])): ?>
+                            <?php $tag = $tagsById[$tagId]; ?>
+                            <span class="badge bg-secondary me-1"
+                          <?php if ($tag->description() !== null): ?>
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title="<?= htmlspecialchars($tag->description()) ?>"
+                          <?php endif; ?>
+                          style="cursor: <?= $tag->description() !== null ? 'help' : 'default' ?>;">
+                        <?= htmlspecialchars($tag->name()) ?>
+                    </span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
         <!-- Год издания -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Год издания:</div>

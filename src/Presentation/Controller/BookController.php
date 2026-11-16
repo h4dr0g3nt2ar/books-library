@@ -13,6 +13,8 @@ use App\Infrastructure\Database\PdoCountryRepository;
 use App\Infrastructure\Database\PdoPublisherRepository;
 use App\Infrastructure\Database\PdoSeriesRepository;
 use App\Infrastructure\Database\PdoTranslatorRepository;
+use App\Infrastructure\Database\PdoTagRepository;
+
 
 final class BookController
 {
@@ -24,14 +26,13 @@ final class BookController
         public readonly PdoPublisherRepository $publisherRepo,
         public readonly PdoSeriesRepository $seriesRepo,
         public readonly PdoTranslatorRepository $translatorRepo,
+        public readonly PdoTagRepository $tagRepo,
     ){
     }
     public function index():void {
 
         $books = $this->bookRepo->all();
         $total = $this->bookRepo->count();
-
-        \App\Infrastructure\Debug\Debug::dtc($books);
 
         $allAuthorIds = [];
 
@@ -40,7 +41,6 @@ final class BookController
         }
 
         $allAuthorIds = array_unique($allAuthorIds);
-
 
         $authors = $this->authorRepo->findByIds($allAuthorIds);
 
@@ -80,6 +80,20 @@ final class BookController
             $authorsById[$author->id()] = $author;
         }
 
+        $translators = $this->translatorRepo->findByIds($book->translatorIds());
+        $translatorsById = [];
+
+        foreach($translators as $translator){
+            $translatorsById[$translator->id()] = $translator;
+        }
+
+        $tags = $this->tagRepo->findByIds($book->tagIds());
+        $tagsById = [];
+
+        foreach($tags as $tag){
+            $tagsById[$tag->id()] = $tag;
+        }
+
         $title = $book->title();
         $country = $book->countryId() !== null ? $this->countryRepo->findById($book->countryId()) : null;
         $publisher = $book->publisherId() !== null ? $this->publisherRepo->findById($book->publisherId()) : null;
@@ -91,7 +105,9 @@ final class BookController
             'country' => $country,
             'publisher' => $publisher,
             'series' => $series,
-            'authorsById' => $authorsById
+            'authorsById' => $authorsById,
+            'translatorsById' => $translatorsById,
+            'tagsById' => $tagsById,
         ];
         $content = render('book/show', $data);
 
@@ -109,6 +125,7 @@ final class BookController
             'countries' => $this->countryRepo->all(),
             'publishers' => $this->publisherRepo->all(),
             'translators' => $this->translatorRepo->all(),
+            'tags' => $this->tagRepo->all(),
             'series' => $this->seriesRepo->all(),
             'errors' => []
         ];
@@ -141,6 +158,8 @@ final class BookController
         $seriesId = ($_POST['series_id'] ?? '') !== '' ? (int) $_POST['series_id'] : null;
 
         $translatorIds = array_map('intval', $_POST['translatorIds'] ?? []);
+        $tagIds = array_map('intval', $_POST['tagIds'] ?? []);
+
 
 
         $errors = [];
@@ -160,7 +179,8 @@ final class BookController
 
                 authorIds: $authorIds,
 
-                translatorIds: $translatorIds
+                translatorIds: $translatorIds,
+                tagIds: $tagIds
             );
         }catch (\InvalidArgumentException $e){
             $errors[] = $e->getMessage();
@@ -169,6 +189,8 @@ final class BookController
 
             $authors = $this->authorRepo->all();
             $translators = $this->translatorRepo->all();
+            $tags = $this->tagRepo->all();
+
             $title = 'Добавить книгу';
 
             $data = [
@@ -176,6 +198,7 @@ final class BookController
                 'title' => $title,
                 'authors' => $authors,
                 'translators' => $translators,
+                'tags' => $tags,
                 'errors' => $errors,
                 'old' => $_POST,
             ];
@@ -209,6 +232,7 @@ final class BookController
             'countries' => $this->countryRepo->all(),
             'publishers' => $this->publisherRepo->all(),
             'translators' => $this->translatorRepo->all(),
+            'tags' => $this->tagRepo->all(),
             'series' => $this->seriesRepo->all(),
             'errors' => []
         ];
@@ -232,6 +256,8 @@ final class BookController
         $year = (int) ($_POST['year'] ?? 0);
         $authorIds = array_map('intval', $_POST['authorIds'] ?? []);
         $translatorIds = array_map('intval', $_POST['translatorIds'] ?? []);
+        \App\Infrastructure\Debug\Debug::dtc($translatorIds, 'POST translatorIds');
+        $tagIds = array_map('intval', $_POST['tagIds'] ?? []);
 
 
         $description = trim($_POST['description'] ?? '') ?: null;
@@ -294,6 +320,20 @@ final class BookController
                 }
             }
 
+            $tagIdsByBook = $book->tagIds();
+
+            foreach($tagIds as $tagId){
+                if(!in_array($tagId, $tagIdsByBook)){
+                    $book->addTag($tagId);
+                }
+            }
+
+            foreach ($tagIdsByBook as $tagIdByBook) {
+                if(!in_array($tagIdByBook, $tagIds)){
+                    $book->removeTag($tagIdByBook);
+                }
+            }
+
         }catch (\InvalidArgumentException $e){
             $errors[] = $e->getMessage();
         }
@@ -306,6 +346,7 @@ final class BookController
                 'title' => $title,
                 'authors' => $this->authorRepo->all(),
                 'translators' => $this->translatorRepo->all(),
+                'tags' => $this->tagRepo->all(),
                 'errors' => $errors,
                 'old' => $_POST,
             ];
@@ -315,6 +356,7 @@ final class BookController
 
             return;
         }
+        \App\Infrastructure\Debug\Debug::dtc($book->translatorIds(), 'translatorIds');
         $this->bookRepo->save($book);
         header('Location: /books/' . $book->id());
 

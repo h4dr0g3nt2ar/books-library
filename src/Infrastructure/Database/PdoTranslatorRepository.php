@@ -69,6 +69,39 @@ final class PdoTranslatorRepository implements TranslatorRepositoryInterface
             updatedAt: new \DateTimeImmutable($row['updated_at'])
         );
     }
+    public function findByIds(array $ids): array{
+
+        if($ids ===[]){
+            return [];
+        }
+        $ids = \array_values($ids);
+
+        $placeholders = \implode(',', \array_fill(0, \count($ids), '?'));
+
+        $stmt = $this->pdo->prepare("SELECT * FROM translators WHERE id IN ($placeholders)");
+
+        $stmt->execute($ids);
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if($rows === []){
+            return [];
+        }
+
+        $translators = [];
+
+        foreach($rows as $row){
+            $translators[]= Translator::reconstitute(
+                id: (int)$row['id'],
+                name: $row['name'],
+                description: $row['description'],
+                createdAt: new \DateTimeImmutable($row['created_at']),
+                updatedAt: new \DateTimeImmutable($row['updated_at'])
+            );
+        }
+
+        return $translators;
+    }
     public function all(int $limit = 100, int $offset = 0): array{
         $stmt = $this->pdo->prepare(
             "SELECT * FROM translators ORDER BY name LIMIT :limit OFFSET :offset"
