@@ -46,6 +46,7 @@ final class PdoAuthorRepository implements AuthorRepositoryInterface
         }
         $ids = \array_values($ids);
 
+
         $placeholders = \implode(',', \array_fill(0, \count($ids), '?'));
 
         $stmt = $this->pdo->prepare("SELECT * FROM authors WHERE id IN ($placeholders)");

@@ -152,14 +152,18 @@ final class SeriesController
             echo '<a href="/series">К списку издательств</a>';
             return;
         }
-        $books = $this->bookRepo->findByPublisherId($id);
+        $books = $this->bookRepo->findBySeriesId($id);
 
         $allAuthorIds = [];
         foreach ($books as $book) {
-            $allAuthorIds[] = $book->getAuthorId();
+            foreach ($book->authorIds() as $authorId) {
+                $allAuthorIds[(int)$authorId] = true;
+            }
         }
-        $allAuthorIds = array_unique($allAuthorIds);
+        $allAuthorIds = array_keys($allAuthorIds);
+
         $authors = $allAuthorIds === [] ? [] : $this->authorRepo->findByIds($allAuthorIds);
+
         $authorsById = [];
         foreach ($authors as $author) {
             $authorsById[$author->id()] = $author;

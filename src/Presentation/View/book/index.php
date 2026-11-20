@@ -26,18 +26,27 @@
         <?php foreach ($books as $book): ?>
             <tr>
                 <td><?= $book->id() ?></td>
-                <td><?= htmlspecialchars($book->title()) ?></td>
+                <td><a href="/books/<?= $book->id() ?>"><?= htmlspecialchars($book->title()) ?></a></td>
                 <td><?= $book->year() ?></td>
                 <td>
-                    <?php
+                    <?
                     $names = [];
+                    $links = [];
                     foreach ($book->authorIds() as $authorId) {
                         if (isset($authorsById[$authorId])) {
-                            $names[] = htmlspecialchars($authorsById[$authorId]->name());
+                            $names[$authorId] = htmlspecialchars($authorsById[$authorId]->name());
+                            $links[$authorId] = "/authors/" . $authorsById[$authorId]->id();
                         }
                     }
-                    echo $names === [] ? '—' : implode(', ', $names);
+                    $lastKey = array_key_last($names);
+                    foreach ($names as $authorId => $name) {
+                        ?><a href="<?=$links[$authorId]?>"><?=htmlspecialchars($name);?></a><?
+                        if($authorId !== $lastKey){
+                            echo ', ';
+                        }
+                    }
                     ?>
+
                 </td>
                 <td><?=$book->createdAt()->format('d.m.Y H:i:s')?></td>
                 <td><?=$book->updatedAt()->format('d.m.Y H:i:s')?></td>

@@ -21,7 +21,7 @@
         <?php foreach ($tags as $tag): ?>
             <tr>
                 <td><?= $tag->id() ?></td>
-                <td><?= htmlspecialchars($tag->name()) ?></td>
+                <td><a href="/tags/<?= $tag->id() ?>"><?= htmlspecialchars($tag->name()) ?></a></td>
                 <td><?= $tag->createdAt()->format('d.m.Y H:i') ?></td>
                 <td class="text-end">
                     <a href="/tags/<?= $tag->id() ?>" class="btn btn-sm btn-outline-primary">Открыть</a>

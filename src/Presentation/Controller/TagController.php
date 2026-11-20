@@ -29,7 +29,8 @@ final class TagController
 
         require BASE_PATH . '/src/Presentation/View/layout.php';
     }
-    public function show(int $id): void{
+    public function show(int $id): void
+    {
         $tag = $this->tagRepo->findById($id);
         if ($tag === null) {
             http_response_code(404);
@@ -37,27 +38,31 @@ final class TagController
             echo '<a href="/tags">К списку тегов</a>';
             return;
         }
+
         $books = $this->bookRepo->findByTagId($id);
 
         $allAuthorIds = [];
         foreach ($books as $book) {
-            $allAuthorIds[] = $book->authorIds();
+            foreach ($book->authorIds() as $authorId) {
+                $allAuthorIds[(int)$authorId] = true;
+            }
         }
-        $allAuthorIds = array_unique($allAuthorIds);
+        $allAuthorIds = array_keys($allAuthorIds);
+
         $authors = $allAuthorIds === [] ? [] : $this->authorRepo->findByIds($allAuthorIds);
+
         $authorsById = [];
         foreach ($authors as $author) {
             $authorsById[$author->id()] = $author;
         }
-        $content = render('tag/show', [
-                'tag' => $tag,
-                'books' => $books,
-                'authorsById' => $authorsById,
-                'title' => $tag->name(),
-            ]
-        );
-        require BASE_PATH . '/src/Presentation/View/layout.php';
 
+        $content = render('tag/show', [
+            'tag' => $tag,
+            'books' => $books,
+            'authorsById' => $authorsById,
+            'title' => $tag->name(),
+        ]);
+        require BASE_PATH . '/src/Presentation/View/layout.php';
     }
     public function create(): void{
         $title = 'Добавить тег';

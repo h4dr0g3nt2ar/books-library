@@ -21,7 +21,7 @@
         <?php foreach ($series as $series): ?>
             <tr>
                 <td><?= $series->id() ?></td>
-                <td><?= htmlspecialchars($series->name()) ?></td>
+                <td><a href="/series/<?= $series->id() ?>" ><?= htmlspecialchars($series->name()) ?></a></td>
                 <td><?= $series->createdAt()->format('d.m.Y H:i') ?></td>
                 <td class="text-end">
                     <a href="/series/<?= $series->id() ?>" class="btn btn-sm btn-outline-primary">Открыть</a>

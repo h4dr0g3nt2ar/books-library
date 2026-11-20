@@ -89,7 +89,7 @@
             <label for="series_id" class="form-label">Серия</label>
             <select name="series_id" id="series_id" class="form-select">
                 <option value="">— Не указана —</option>
-                <?php foreach ($seriesList as $seriesItem): ?>
+                <?php foreach ($series as $seriesItem): ?>
                     <?php
                     $isSelected = ($book !== null && $book->seriesId() === $seriesItem->id())
                         || (isset($old['series_id']) && (int) $old['series_id'] === $seriesItem->id());

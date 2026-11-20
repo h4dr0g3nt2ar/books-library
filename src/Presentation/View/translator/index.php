@@ -21,7 +21,7 @@
         <?php foreach ($translators as $translator): ?>
             <tr>
                 <td><?= $translator->id() ?></td>
-                <td><?= htmlspecialchars($translator->name()) ?></td>
+                <td><a href="/translators/<?= $translator->id() ?>"><?= htmlspecialchars($translator->name()) ?></a></td>
                 <td><?= $translator->createdAt()->format('d.m.Y H:i') ?></td>
                 <td class="text-end">
                     <a href="/translators/<?= $translator->id() ?>" class="btn btn-sm btn-outline-primary">Открыть</a>

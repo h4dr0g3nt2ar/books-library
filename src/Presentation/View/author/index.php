@@ -25,7 +25,7 @@
         <?php foreach ($authors as $author): ?>
             <tr>
                 <td><?= $author->id() ?></td>
-                <td><?= htmlspecialchars($author->name()) ?></td>
+                <td><a href="/authors/<?= $author->id() ?>"><?= htmlspecialchars($author->name()) ?></a></td>
                 <td><?=$author->birthYear()?> - <?=$author->deathYear() !== null ? $author->deathYear() : '...'?></td>
                 <td><?=$author->createdAt()->format('d.m.Y H:i:s')?></td>
                 <td><?=$author->updatedAt()->format('d.m.Y H:i:s')?></td>

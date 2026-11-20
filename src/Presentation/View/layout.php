@@ -10,17 +10,41 @@
 </head>
 <body>
 
+<?php
+$currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+// Функция проверки: путь начинается с нужного префикса?
+$isActive = function (string $path, string $prefix): bool {
+    if ($prefix === '/') {
+        return $path === '/';
+    }
+    return $path === $prefix || \str_starts_with($path, $prefix . '/');
+};
+
+$navItems = [
+        ['href' => '/books',       'label' => 'Книги',          'prefix' => '/books'],
+        ['href' => '/authors',     'label' => 'Авторы',         'prefix' => '/authors'],
+        ['href' => '/publishers',  'label' => 'Издательства',   'prefix' => '/publishers'],
+        ['href' => '/series',      'label' => 'Книжные серии',  'prefix' => '/series'],
+        ['href' => '/translators', 'label' => 'Переводчики',    'prefix' => '/translators'],
+        ['href' => '/tags',        'label' => 'Теги',           'prefix' => '/tags'],
+        ['href' => '/countries',   'label' => 'Страны',         'prefix' => '/countries'],
+];
+?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="/">📚 Домашняя библиотека</a>
         <ul class="navbar-nav">
-            <li class="nav-item"><a class="nav-link" href="/books">Книги</a></li>
-            <li class="nav-item"><a class="nav-link" href="/authors">Авторы</a></li>
-            <li class="nav-item"><a class="nav-link" href="/publishers">Издательства</a></li>
-            <li class="nav-item"><a class="nav-link" href="/series">Книжные серии</a></li>
-            <li class="nav-item"><a class="nav-link" href="/translators">Переводчики</a></li>
-            <li class="nav-item"><a class="nav-link" href="/tags">Теги</a></li>
-            <li class="nav-item"><a class="nav-link" href="/countries">Страны</a></li>
+            <?php foreach ($navItems as $item): ?>
+                <?php $active = $isActive($currentPath, $item['prefix']); ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= $active ? 'active' : '' ?>"
+                       href="<?= htmlspecialchars($item['href']) ?>"
+                            <?= $active ? 'aria-current="page"' : '' ?>>
+                        <?= htmlspecialchars($item['label']) ?>
+                    </a>
+                </li>
+            <?php endforeach; ?>
         </ul>
     </div>
 </nav>

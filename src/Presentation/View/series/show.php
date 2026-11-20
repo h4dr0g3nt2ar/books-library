@@ -32,13 +32,24 @@
                             <a href="/books/<?= $book->id() ?>"><?= htmlspecialchars($book->title()) ?></a>,
                             <?= $book->year() ?>
                             <?php
+
                             $names = [];
+                            $links = [];
                             foreach ($book->authorIds() as $authorId) {
                                 if (isset($authorsById[$authorId])) {
-                                    $names[] = htmlspecialchars($authorsById[$authorId]->name());
+                                    $names[$authorId] = htmlspecialchars($authorsById[$authorId]->name());
+                                    $links[$authorId] = "/authors/" . $authorsById[$authorId]->id();
                                 }
                             }
-                            if ($names !== []) echo ' — ' . implode(', ', $names);
+                            $lastKey = array_key_last($names);
+                            if ($names !== []) echo ' — ' ;
+                            foreach ($names as $authorId => $name) {
+                                ?><a href="<?=$links[$authorId]?>"><?=htmlspecialchars($name);?></a><?
+                                if($authorId !== $lastKey){
+                                    echo ', ';
+                                }
+                            }
+
                             ?>
                         </p>
                     <?php endforeach; ?>

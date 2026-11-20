@@ -21,7 +21,7 @@
         <?php foreach ($publishers as $publisher): ?>
             <tr>
                 <td><?= $publisher->id() ?></td>
-                <td><?= htmlspecialchars($publisher->name()) ?></td>
+                <td><a href="/publishers/<?= $publisher->id() ?>"><?= htmlspecialchars($publisher->name()) ?></a></td>
                 <td><?= $publisher->createdAt()->format('d.m.Y H:i') ?></td>
                 <td class="text-end">
                     <a href="/publishers/<?= $publisher->id() ?>" class="btn btn-sm btn-outline-primary">Открыть</a>

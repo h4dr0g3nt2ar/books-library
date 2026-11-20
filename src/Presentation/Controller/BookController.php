@@ -256,7 +256,6 @@ final class BookController
         $year = (int) ($_POST['year'] ?? 0);
         $authorIds = array_map('intval', $_POST['authorIds'] ?? []);
         $translatorIds = array_map('intval', $_POST['translatorIds'] ?? []);
-        \App\Infrastructure\Debug\Debug::dtc($translatorIds, 'POST translatorIds');
         $tagIds = array_map('intval', $_POST['tagIds'] ?? []);
 
 

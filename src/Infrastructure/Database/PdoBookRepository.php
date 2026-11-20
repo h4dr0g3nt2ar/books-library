@@ -313,5 +313,65 @@ final class PdoBookRepository implements BookRepositoryInterface
         }
     }
 
+    public function search(array $filters, int $limit = 100, int $offset = 0): array {
+
+        $sql = 'SELECT * FROM books';
+        $joins = [];
+        $conditions = [];
+        $params = [];
+
+        if (isset($filters['title']) && trim($filters['title']) !== '') {
+            $conditions[] = 'books.title LIKE :title';
+            $params[':title'] = '%' . addcslashes(trim($filters['title']), '%_\\') . '%';
+        }
+
+        $exactIntFields = ['author_id', 'country_id', 'publisher_id', 'series_id'];
+        foreach ($exactIntFields as $field) {
+            if (isset($filters[$field]) && $filters[$field] !== '') {
+                $conditions[] = "books.{$field} = :{$field}";
+                $params[":{$field}"] = (int) $filters[$field];
+            }
+        }
+
+        if (isset($filters['year_from']) && $filters['year_from'] !== '') {
+            $conditions[] = 'books.year >= :year_from';
+            $params[':year_from'] = (int) $filters['year_from'];
+        }
+
+        if (isset($filters['year_to']) && $filters['year_to'] !== '') {
+            $conditions[] = 'books.year <= :year_to';
+            $params[':year_to'] = (int) $filters['year_to'];
+        }
+
+        if (isset($filters['tag_id']) && $filters['tag_id'] !== '') {
+            $joins[] = 'INNER JOIN book_tag ON book_tag.book_id = books.id';
+            $conditions[] = 'book_tag.tag_id = :tag_id';
+            $params[':tag_id'] = (int) $filters['tag_id'];
+        }
+
+        if ($joins !== []) {
+            $sql .= ' ' . implode(' ', $joins);
+        }
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY books.id LIMIT :limit OFFSET :offset';
+
+        $stmt = $this->pdo->prepare($sql);
+
+        foreach ($params as $key => $value) {
+            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $type);
+        }
+
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 
 }
