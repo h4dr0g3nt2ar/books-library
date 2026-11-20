@@ -10,18 +10,21 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
+
         <!-- Авторы -->
         <div class="row mb-3">
-            <div class="col-sm-3 text-muted">Авторы:</div>
+            <div class="col-sm-3 text-muted"><?= count($book->authorIds()) > 1 ? 'Авторы' : 'Автор' ?>:</div>
             <div class="col-sm-9">
                 <?php
-                $names = [];
+                $authorLinks = [];
                 foreach ($book->authorIds() as $authorId) {
                     if (isset($authorsById[$authorId])) {
-                        $names[] = htmlspecialchars($authorsById[$authorId]->name());
+                        $authorLinks[] = '<a href="/authors/' . $authorsById[$authorId]->id() . '">'
+                                . htmlspecialchars($authorsById[$authorId]->name())
+                                . '</a>';
                     }
                 }
-                echo $names === [] ? '—' : implode(', ', $names);
+                echo $authorLinks === [] ? '—' : implode(', ', $authorLinks);
                 ?>
             </div>
         </div>
@@ -31,16 +34,20 @@
             <div class="col-sm-3 text-muted">Переводчики:</div>
             <div class="col-sm-9">
                 <?php
-                $names = [];
+                $translatorLinks = [];
                 foreach ($book->translatorIds() as $translatorId) {
                     if (isset($translatorsById[$translatorId])) {
-                        $names[] = htmlspecialchars($translatorsById[$translatorId]->name());
+                        $translatorLinks[] = '<a href="/translators/' . $translatorsById[$translatorId]->id() . '">'
+                                . htmlspecialchars($translatorsById[$translatorId]->name())
+                                . '</a>';
                     }
                 }
-                echo $names === [] ? '—' : implode(', ', $names);
+                echo $translatorLinks === [] ? '—' : implode(', ', $translatorLinks);
                 ?>
             </div>
         </div>
+
+        <!-- Теги (бейджи-ссылки с тултипом) -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Теги:</div>
             <div class="col-sm-9">
@@ -50,27 +57,29 @@
                     <?php foreach ($book->tagIds() as $tagId): ?>
                         <?php if (isset($tagsById[$tagId])): ?>
                             <?php $tag = $tagsById[$tagId]; ?>
-                            <span class="badge bg-secondary me-1"
-                          <?php if ($tag->description() !== null): ?>
-                              data-bs-toggle="tooltip"
-                              data-bs-placement="top"
-                              title="<?= htmlspecialchars($tag->description()) ?>"
-                          <?php endif; ?>
-                          style="cursor: <?= $tag->description() !== null ? 'help' : 'default' ?>;">
-                        <?= htmlspecialchars($tag->name()) ?>
-                    </span>
+                            <a href="/tags/<?= $tag->id() ?>"
+                               class="badge bg-secondary me-1 text-decoration-none"
+                                    <?php if ($tag->description() !== null): ?>
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="<?= htmlspecialchars($tag->description()) ?>"
+                                    <?php endif; ?>
+                               style="cursor: <?= $tag->description() !== null ? 'help' : 'pointer' ?>;">
+                                <?= htmlspecialchars($tag->name()) ?>
+                            </a>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
         </div>
+
         <!-- Год издания -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Год издания:</div>
             <div class="col-sm-9"><?= $book->year() ?></div>
         </div>
 
-        <!-- Страна -->
+        <!-- Страна — БЕЗ ссылки -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Страна:</div>
             <div class="col-sm-9"><?= $country !== null ? htmlspecialchars($country->name()) : '—' ?></div>
@@ -79,13 +88,25 @@
         <!-- Издательство -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Издательство:</div>
-            <div class="col-sm-9"><?= $publisher !== null ? htmlspecialchars($publisher->name()) : '—' ?></div>
+            <div class="col-sm-9">
+                <?php if ($publisher !== null): ?>
+                    <a href="/publishers/<?= $publisher->id() ?>"><?= htmlspecialchars($publisher->name()) ?></a>
+                <?php else: ?>
+                    —
+                <?php endif; ?>
+            </div>
         </div>
 
         <!-- Серия -->
         <div class="row mb-3">
             <div class="col-sm-3 text-muted">Серия:</div>
-            <div class="col-sm-9"><?= $series !== null ? htmlspecialchars($series->name()) : '—' ?></div>
+            <div class="col-sm-9">
+                <?php if ($series !== null): ?>
+                    <a href="/series/<?= $series->id() ?>"><?= htmlspecialchars($series->name()) ?></a>
+                <?php else: ?>
+                    —
+                <?php endif; ?>
+            </div>
         </div>
 
         <!-- Переплёт -->

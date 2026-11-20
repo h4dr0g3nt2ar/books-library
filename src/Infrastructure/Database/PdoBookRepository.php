@@ -7,6 +7,7 @@ namespace App\Infrastructure\Database;
 use App\Domain\Book\Book;
 use App\Domain\Book\BookRepositoryInterface;
 use App\Domain\Book\Enum\BindingType;
+use PDO;
 
 final class PdoBookRepository implements BookRepositoryInterface
 {
@@ -85,27 +86,7 @@ final class PdoBookRepository implements BookRepositoryInterface
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        if ($rows === []) {
-            return [];
-        }
-
-        $bookIds = \array_map(static fn($r) => (int) $r['id'], $rows);
-
-        $authorsByBook     = $this->loadRelatedIds('book_author', 'author_id', $bookIds);
-        $translatorsByBook = $this->loadRelatedIds('book_translator', 'translator_id', $bookIds);
-        $tagsByBook        = $this->loadRelatedIds('book_tag', 'tag_id', $bookIds);
-
-        $books = [];
-        foreach ($rows as $row) {
-            $id = (int) $row['id'];
-            $books[] = $this->bookFromRow(
-                $row,
-                $authorsByBook[$id] ?? [],
-                $translatorsByBook[$id] ?? [],
-                $tagsByBook[$id] ?? [],
-            );
-        }
-        return $books;
+        return $this->loadBooksFromRows($rows);
     }
     public function findById(int $id): ?Book
     {
@@ -313,65 +294,81 @@ final class PdoBookRepository implements BookRepositoryInterface
         }
     }
 
-    public function search(array $filters, int $limit = 100, int $offset = 0): array {
-
-        $sql = 'SELECT * FROM books';
-        $joins = [];
-        $conditions = [];
-        $params = [];
-
-        if (isset($filters['title']) && trim($filters['title']) !== '') {
-            $conditions[] = 'books.title LIKE :title';
-            $params[':title'] = '%' . addcslashes(trim($filters['title']), '%_\\') . '%';
-        }
-
-        $exactIntFields = ['author_id', 'country_id', 'publisher_id', 'series_id'];
-        foreach ($exactIntFields as $field) {
-            if (isset($filters[$field]) && $filters[$field] !== '') {
-                $conditions[] = "books.{$field} = :{$field}";
-                $params[":{$field}"] = (int) $filters[$field];
-            }
-        }
-
-        if (isset($filters['year_from']) && $filters['year_from'] !== '') {
-            $conditions[] = 'books.year >= :year_from';
-            $params[':year_from'] = (int) $filters['year_from'];
-        }
-
-        if (isset($filters['year_to']) && $filters['year_to'] !== '') {
-            $conditions[] = 'books.year <= :year_to';
-            $params[':year_to'] = (int) $filters['year_to'];
-        }
-
-        if (isset($filters['tag_id']) && $filters['tag_id'] !== '') {
-            $joins[] = 'INNER JOIN book_tag ON book_tag.book_id = books.id';
-            $conditions[] = 'book_tag.tag_id = :tag_id';
-            $params[':tag_id'] = (int) $filters['tag_id'];
-        }
-
-        if ($joins !== []) {
-            $sql .= ' ' . implode(' ', $joins);
-        }
-
-        if ($conditions !== []) {
-            $sql .= ' WHERE ' . implode(' AND ', $conditions);
-        }
-
-        $sql .= ' ORDER BY books.id LIMIT :limit OFFSET :offset';
-
+    public function search(array $filters, int $limit = 100, int $offset = 0): array{
+        [$whereSql, $params] = $this->buildWhere($filters);
+        $sql = "SELECT books . * FROM books {$whereSql} ORDER BY books_id LIMIT {$offset}, {$limit}";
         $stmt = $this->pdo->prepare($sql);
 
-        foreach ($params as $key => $value) {
-            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
-            $stmt->bindValue($key, $value, $type);
+        foreach ($params as $key => $value){
+            $stmt->bindValue($key, $value, \is_int($value) ? PDO::PARAM_INT : \PDO::PARAM_STR);
         }
-
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-
         $stmt->execute();
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->loadBooksFromRows($rows);
+    }
+    private function buildWhere(array $filters): array{
+        $conditions = [];
+        $params = [];
+        if(\isset($filters['title']) && \trim($filters['title']) !== ''){
+            $conditions[] = 'books.title LIKE :title';
+            $params[':title'] = '%'.\addslashes(\trim($filters['title'])).'%';
+        }
+        foreach (['country_id', 'publisher_id', 'series_id'] as $field){
+            $value = (int)($filters[$field] ?? 0);
+            if($value > 0){
+                $conditions[] = "books.{$field} = :{$field}";
+                $params[':'.$field] = $value;
+            }
+        }
+        if(\isset($filters['year_from']) && (int)$filters['year_from'] > 0){
+            $conditions[] = "books.year >= :year_from";
+            $params[':year_from'] = (int)$filters['year_from'];
+        }
+        if(\isset($filters['binding']) && $filters['binding'] !== ''){
+            $conditions[] = "books.binding LIKE :binding";
+            $params[':binding'] = $filters['binding'];
+        }
+        $authorId = (int)($filters['author_id'] ?? 0);
+        if($authorId > 0){
+            $conditions[] = 'EXISTS (SELECT 1 FROM book_author WHERE book_author.book_id = books.id AND book_author.author_id = :author_id)';
+            $params[':author_id'] = $authorId;
+        }
+        $tagId = (int)($filters['tag_id'] ?? 0);
+        if($tagId > 0){
+            $conditions[] = 'EXISTS (SELECT 1 FROM book_tag WHERE book_tag.book_id = books.id AND book_tag.tag_id = :tag_id)';
+            $params[':tag_id'] = $tagId;
+        }
+        $whereSql = $conditions === [] ? '' : 'WHERE ' . \implode(' AND ', $conditions);
+        return [$whereSql, $params];
+    }
+    public function countWithFilters(array $filters): int{
+        [$whereSql, $params] = $this->buildWhere($filters);
+
+        $sql = "SELECT COUNT(*) FROM books {$whereSql}";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return (int) $stmt->fetchColumn();
+    }
+    private function loadBooksFromRows(array $rows): array{
+        if($rows === []){
+            return [];
+        }
+        $bookIds = \array_map(static function($r){(int)$r['id'];}, $rows);
+
+        $authorsByBook = $this->loadRelatedIds('book_author', 'author_id', $bookIds);
+        $translatorsByBook = $this->loadRelatedIds('book_translator', 'translator_id', $bookIds);
+        $tagsByBook = $this->loadRelatedIds('book_tag', 'tag_id', $bookIds);
+
+        $books = [];
+        foreach($rows as $row){
+            $id = (int) $row['id'];
+            $books[] = $this->bookFromRow($row, $authorsByBook[$id] ?? [], $translatorsByBook[$id] ?? [], $tagsByBook[$id] ?? []);
+        }
+        return $books;
     }
 
 }
