@@ -33,6 +33,9 @@ final class PdoBookRepository implements BookRepositoryInterface
         }
     }
     private function loadRelatedIds(string $table, string $idColumn, array $bookIds): array{
+        \App\Infrastructure\Debug\Debug::dtc($table, 'loadRelatedIds table');
+        \App\Infrastructure\Debug\Debug::dtc($bookIds, 'loadRelatedIds bookIds');
+        \App\Infrastructure\Debug\Debug::dtc($rows, 'loadRelatedIds rows');
         if($bookIds === []){
             return [];
         }
@@ -296,7 +299,7 @@ final class PdoBookRepository implements BookRepositoryInterface
 
     public function search(array $filters, int $limit = 100, int $offset = 0): array{
         [$whereSql, $params] = $this->buildWhere($filters);
-        $sql = "SELECT books . * FROM books {$whereSql} ORDER BY books_id LIMIT {$offset}, {$limit}";
+        $sql = "SELECT books . * FROM books {$whereSql} ORDER BY id LIMIT :limit OFFSET :offset";
         $stmt = $this->pdo->prepare($sql);
 
         foreach ($params as $key => $value){
@@ -312,7 +315,7 @@ final class PdoBookRepository implements BookRepositoryInterface
     private function buildWhere(array $filters): array{
         $conditions = [];
         $params = [];
-        if(\isset($filters['title']) && \trim($filters['title']) !== ''){
+        if(isset($filters['title']) && \trim($filters['title']) !== ''){
             $conditions[] = 'books.title LIKE :title';
             $params[':title'] = '%'.\addslashes(\trim($filters['title'])).'%';
         }
@@ -323,11 +326,15 @@ final class PdoBookRepository implements BookRepositoryInterface
                 $params[':'.$field] = $value;
             }
         }
-        if(\isset($filters['year_from']) && (int)$filters['year_from'] > 0){
+        if(isset($filters['year_from']) && (int)$filters['year_from'] > 0){
             $conditions[] = "books.year >= :year_from";
             $params[':year_from'] = (int)$filters['year_from'];
         }
-        if(\isset($filters['binding']) && $filters['binding'] !== ''){
+        if (isset($filters['year_to']) && (int) $filters['year_to'] > 0) {
+            $conditions[] = 'books.year <= :year_to';
+            $params[':year_to'] = (int) $filters['year_to'];
+        }
+        if(isset($filters['binding']) && $filters['binding'] !== ''){
             $conditions[] = "books.binding LIKE :binding";
             $params[':binding'] = $filters['binding'];
         }

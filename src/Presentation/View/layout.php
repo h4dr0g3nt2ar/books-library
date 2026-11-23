@@ -64,28 +64,22 @@ $navItems = [
 
 <script>
     $(document).ready(function() {
-        $('#authors').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Начните вводить имя автора...',
-            allowClear: true,
-            width: '100%',
-            language: { noResults: function() { return "Ничего не найдено"; } }
-        });
+        if (typeof jQuery !== 'undefined' && jQuery.fn.select2) {
+            jQuery('.js-select2').each(function() {
+                var $el = jQuery(this);
+                var placeholder = $el.data('placeholder') || 'Начните вводить...';
 
-        $('#translators').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Начните вводить имя переводчика...',
-            allowClear: true,
-            width: '100%',
-            language: { noResults: function() { return "Ничего не найдено"; } }
-        });
-        $('#tags').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Начните вводить название тега...',
-            allowClear: true,
-            width: '100%',
-            language: { noResults: function() { return "Ничего не найдено"; } }
-        });
+                $el.select2({
+                    theme: 'bootstrap-5',
+                    placeholder: placeholder,
+                    allowClear: true,
+                    width: '100%',
+                    language: {
+                        noResults: function() { return 'Ничего не найдено'; }
+                    }
+                });
+            });
+        }
     });
 </script>
 <script>

@@ -31,19 +31,47 @@ final class BookController
     }
     public function index():void {
 
-        $books = $this->bookRepo->all();
-        $total = $this->bookRepo->count();
+        $filters = [
+            'title'        => trim($_GET['title'] ?? ''),
+            'author_id'    => (int) ($_GET['author_id'] ?? 0),
+            'country_id'   => (int) ($_GET['country_id'] ?? 0),
+            'publisher_id' => (int) ($_GET['publisher_id'] ?? 0),
+            'series_id'    => (int) ($_GET['series_id'] ?? 0),
+            'tag_id'       => (int) ($_GET['tag_id'] ?? 0),
+            'year_from'    => ($_GET['year_from'] ?? '') !== '' ? (int) $_GET['year_from'] : null,
+            'year_to'      => ($_GET['year_to'] ?? '') !== '' ? (int) $_GET['year_to'] : null,
+            'binding'      => $_GET['binding'] ?? '',
+        ];
+
+//        $books = $this->bookRepo->all();
+//        $total = $this->bookRepo->count();
+
+        $books = $this->bookRepo->search($filters);
+
+        \App\Infrastructure\Debug\Debug::dtc(count($books), 'books count');
+        foreach ($books as $i => $book) {
+            \App\Infrastructure\Debug\Debug::dtc([
+                'id' => $book->id(),
+                'title' => $book->title(),
+                'authorIds' => $book->authorIds(),
+            ], "book #$i");
+        }
+
+        $total = $this->bookRepo->countWithFilters($filters);
 
         $allAuthorIds = [];
+
+        \App\Infrastructure\Debug\Debug::dtc($books, '$books');
+
 
         foreach($books as $book){
             $allAuthorIds = array_merge($allAuthorIds, $book->authorIds());
         }
 
         $allAuthorIds = array_unique($allAuthorIds);
-
-        $authors = $this->authorRepo->findByIds($allAuthorIds);
-
+        \App\Infrastructure\Debug\Debug::dtc($allAuthorIds, '$allAuthorIds');
+        $authors = $allAuthorIds === [] ? [] : $this->authorRepo->findByIds($allAuthorIds);
+        \App\Infrastructure\Debug\Debug::dtc($authors, '$authors');
         $allAuthors = [];
 
         foreach($authors as $author){
@@ -55,7 +83,13 @@ final class BookController
             'books' => $books,
             'title' => $title,
             'total' => $total,
-            'authorsById' => $allAuthors
+            'authorsById' => $allAuthors,
+            'filters' => $filters,
+            'allAuthors' => $this->authorRepo->all(),
+            'allCountries' => $this->countryRepo->all(),
+            'allPublishers' => $this->publisherRepo->all(),
+            'allSeries' => $this->seriesRepo->all(),
+            'allTags' => $this->tagRepo->all(),
         ];
 
         $content = render('book/index', $data);
