@@ -14,6 +14,7 @@ use App\Infrastructure\Database\PdoPublisherRepository;
 use App\Infrastructure\Database\PdoSeriesRepository;
 use App\Infrastructure\Database\PdoTranslatorRepository;
 use App\Infrastructure\Database\PdoTagRepository;
+use App\Presentation\Router;
 
 
 final class BookController
@@ -43,7 +44,19 @@ final class BookController
             'binding'      => $_GET['binding'] ?? '',
         ];
 
-        $books = $this->bookRepo->search($filters);
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $perPage = 2;
+        $offset = ($page - 1) * $perPage;
+
+        $books = $this->bookRepo->search($filters, $perPage, $offset);
+
+        $total = $this->bookRepo->countWithFilters($filters);
+        $totalPages = (int) ceil($total / $perPage);
+
+        if ($page > $totalPages && $totalPages > 0) {
+            header('Location: /books?page=' . $totalPages);
+        }
+
 
         foreach ($books as $i => $book) {
             \App\Infrastructure\Debug\Debug::dtc([
@@ -81,6 +94,12 @@ final class BookController
             'allPublishers' => $this->publisherRepo->all(),
             'allSeries' => $this->seriesRepo->all(),
             'allTags' => $this->tagRepo->all(),
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'perPage' => $perPage,
+            'buildPageUrl' => function(int $p) use ($filters): string{
+                return $this->buildPageUrl($p, $filters);
+            }
         ];
 
         $content = render('book/index', $data);
@@ -401,4 +420,15 @@ final class BookController
         exit;
     }
 
+    private function buildPageUrl($page, $filters): string{
+        $query = [];
+        foreach($filters as $key => $value){
+            if($value !== null && $value !== '' && $value !== '0'){
+                $query[$key] = $value;
+            }
+        }
+        $query['page'] = $page;
+
+        return '/books?' . http_build_query($query);
+    }
 }

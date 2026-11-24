@@ -1,3 +1,4 @@
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><?= htmlspecialchars($title) ?></h1>
     <a href="/books/create" class="btn btn-success">+ Добавить книгу</a>
@@ -117,7 +118,7 @@
         <?php foreach ($books as $book): ?>
             <tr>
                 <td><?= $book->id() ?></td>
-                <td><?= htmlspecialchars($book->title()) ?></td>
+                <td><a href="/books/<?= $book->id() ?>"><?= htmlspecialchars($book->title()) ?></a></td>
                 <td><?= $book->year() ?></td>
                 <td>
                     <?php
@@ -142,4 +143,38 @@
         <?php endforeach; ?>
         </tbody>
     </table>
+    <?php if ($totalPages > 1): ?>
+        <nav aria-label="Пагинация книг">
+            <ul class="pagination justify-content-center">
+                <!-- Назад -->
+                <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                    <?php if ($currentPage > 1): ?>
+                        <a class="page-link" href="<?= htmlspecialchars($buildPageUrl($currentPage - 1)) ?>">←</a>
+                    <?php else: ?>
+                        <span class="page-link">←</span>
+                    <?php endif; ?>
+                </li>
+
+                <!-- Номера -->
+                <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                    <?php if ($p === 1 || $p === $totalPages || abs($p - $currentPage) <= 2): ?>
+                        <li class="page-item <?= $p === $currentPage ? 'active' : '' ?>">
+                            <a class="page-link" href="<?= htmlspecialchars($buildPageUrl($p)) ?>"><?= $p ?></a>
+                        </li>
+                    <?php elseif (abs($p - $currentPage) === 3): ?>
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    <?php endif; ?>
+                <?php endfor; ?>
+
+                <!-- Вперёд -->
+                <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                    <?php if ($currentPage < $totalPages): ?>
+                        <a class="page-link" href="<?= htmlspecialchars($buildPageUrl($currentPage + 1)) ?>">→</a>
+                    <?php else: ?>
+                        <span class="page-link">→</span>
+                    <?php endif; ?>
+                </li>
+            </ul>
+        </nav>
+    <?php endif; ?>
 <?php endif; ?>
