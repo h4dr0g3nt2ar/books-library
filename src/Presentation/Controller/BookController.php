@@ -43,12 +43,8 @@ final class BookController
             'binding'      => $_GET['binding'] ?? '',
         ];
 
-//        $books = $this->bookRepo->all();
-//        $total = $this->bookRepo->count();
-
         $books = $this->bookRepo->search($filters);
 
-        \App\Infrastructure\Debug\Debug::dtc(count($books), 'books count');
         foreach ($books as $i => $book) {
             \App\Infrastructure\Debug\Debug::dtc([
                 'id' => $book->id(),
@@ -61,17 +57,12 @@ final class BookController
 
         $allAuthorIds = [];
 
-        \App\Infrastructure\Debug\Debug::dtc($books, '$books');
-
-
         foreach($books as $book){
             $allAuthorIds = array_merge($allAuthorIds, $book->authorIds());
         }
 
         $allAuthorIds = array_unique($allAuthorIds);
-        \App\Infrastructure\Debug\Debug::dtc($allAuthorIds, '$allAuthorIds');
         $authors = $allAuthorIds === [] ? [] : $this->authorRepo->findByIds($allAuthorIds);
-        \App\Infrastructure\Debug\Debug::dtc($authors, '$authors');
         $allAuthors = [];
 
         foreach($authors as $author){
@@ -389,7 +380,6 @@ final class BookController
 
             return;
         }
-        \App\Infrastructure\Debug\Debug::dtc($book->translatorIds(), 'translatorIds');
         $this->bookRepo->save($book);
         header('Location: /books/' . $book->id());
 

@@ -33,9 +33,7 @@ final class PdoBookRepository implements BookRepositoryInterface
         }
     }
     private function loadRelatedIds(string $table, string $idColumn, array $bookIds): array{
-        \App\Infrastructure\Debug\Debug::dtc($table, 'loadRelatedIds table');
-        \App\Infrastructure\Debug\Debug::dtc($bookIds, 'loadRelatedIds bookIds');
-        \App\Infrastructure\Debug\Debug::dtc($rows, 'loadRelatedIds rows');
+
         if($bookIds === []){
             return [];
         }
@@ -361,10 +359,15 @@ final class PdoBookRepository implements BookRepositoryInterface
         return (int) $stmt->fetchColumn();
     }
     private function loadBooksFromRows(array $rows): array{
+
         if($rows === []){
             return [];
         }
-        $bookIds = \array_map(static function($r){(int)$r['id'];}, $rows);
+        $rows = \array_map(static function ($r) {
+            return (array) $r;
+        }, $rows);
+
+        $bookIds = \array_map(static fn($r) => (int) ($r['id'] ?? 0), $rows);
 
         $authorsByBook = $this->loadRelatedIds('book_author', 'author_id', $bookIds);
         $translatorsByBook = $this->loadRelatedIds('book_translator', 'translator_id', $bookIds);
