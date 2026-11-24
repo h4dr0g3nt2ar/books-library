@@ -57,15 +57,6 @@ final class BookController
             header('Location: /books?page=' . $totalPages);
         }
 
-
-        foreach ($books as $i => $book) {
-            \App\Infrastructure\Debug\Debug::dtc([
-                'id' => $book->id(),
-                'title' => $book->title(),
-                'authorIds' => $book->authorIds(),
-            ], "book #$i");
-        }
-
         $total = $this->bookRepo->countWithFilters($filters);
 
         $allAuthorIds = [];
