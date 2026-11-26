@@ -7,16 +7,30 @@
 <!-- Форма фильтров -->
 <div class="card mb-4">
     <div class="card-body">
+
+        <?php if ($activeFilters !== []): ?>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <span class="text-muted">Фильтры:</span>
+                <?php foreach ($activeFilters as $filter): ?>
+                    <a href="<?= htmlspecialchars(buildFilterUrl($filters, [$filter['key'] => null])) ?>"
+                       class="badge bg-primary text-decoration-none">
+                        <?= htmlspecialchars($filter['label']) ?> ✕
+                    </a>
+                <?php endforeach; ?>
+                <a href="/books" class="btn btn-sm btn-link">Сбросить всё</a>
+            </div>
+        <?php endif; ?>
+
         <form method="get" action="/books" class="row g-2">
             <div class="col-md-4">
                 <label class="form-label small text-muted">Название</label>
-                <input type="text" name="title" class="form-control"
+                <input type="text" name="title" class="form-control<?= $isActive('title') ? ' border-success' : '' ?>"
                        value="<?= htmlspecialchars($filters['title']) ?>"
                        placeholder="Поиск по названию...">
             </div>
             <div class="col-md-4">
                 <label class="form-label small text-muted">Автор</label>
-                <select name="author_id" class="form-select js-select2">
+                <select name="author_id" class="form-select js-select2<?= $isActive('author_id') ? ' border-success' : '' ?>">
                     <option value="">Все авторы</option>
                     <?php foreach ($allAuthors as $author): ?>
                         <option value="<?= $author->id() ?>" <?= $filters['author_id'] === $author->id() ? 'selected' : '' ?>>
@@ -27,7 +41,7 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label small text-muted">Издательство</label>
-                <select name="publisher_id" class="form-select js-select2">
+                <select name="publisher_id" class="form-select js-select2<?= $isActive('publisher_id') ? ' border-success' : '' ?>">
                     <option value="">Все издательства</option>
                     <?php foreach ($allPublishers as $publisher): ?>
                         <option value="<?= $publisher->id() ?>" <?= $filters['publisher_id'] === $publisher->id() ? 'selected' : '' ?>>
@@ -38,7 +52,7 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label small text-muted">Серия</label>
-                <select name="series_id" class="form-select js-select2">
+                <select name="series_id" class="form-select js-select2<?= $isActive('series_id') ? ' border-success' : '' ?>">
                     <option value="">Все серии</option>
                     <?php foreach ($allSeries as $seriesItem): ?>
                         <option value="<?= $seriesItem->id() ?>" <?= $filters['series_id'] === $seriesItem->id() ? 'selected' : '' ?>>
@@ -49,7 +63,7 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label small text-muted">Тег</label>
-                <select name="tag_id" class="form-select js-select2">
+                <select name="tag_id" class="form-select js-select2<?= $isActive('tag_id') ? ' border-success' : '' ?>">
                     <option value="">Все теги</option>
                     <?php foreach ($allTags as $tag): ?>
                         <option value="<?= $tag->id() ?>" <?= $filters['tag_id'] === $tag->id() ? 'selected' : '' ?>>
@@ -60,7 +74,7 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label small text-muted">Страна</label>
-                <select name="country_id" class="form-select">
+                <select name="country_id" class="form-select<?= $isActive('country_id') ? ' border-success' : '' ?>">
                     <option value="">Все страны</option>
                     <?php foreach ($allCountries as $country): ?>
                         <option value="<?= $country->id() ?>" <?= $filters['country_id'] === $country->id() ? 'selected' : '' ?>>
@@ -71,17 +85,17 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted">Год от</label>
-                <input type="number" name="year_from" class="form-control" min="1000" max="2100"
+                <input type="number" name="year_from" class="form-control<?= $isActive('year_from') ? ' border-success' : '' ?>" min="1000" max="2100"
                        value="<?= $filters['year_from'] ?? '' ?>">
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted">Год до</label>
-                <input type="number" name="year_to" class="form-control" min="1000" max="2100"
+                <input type="number" name="year_to" class="form-control<?= $isActive('year_to') ? ' border-success' : '' ?>" min="1000" max="2100"
                        value="<?= $filters['year_to'] ?? '' ?>">
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted">Переплёт</label>
-                <select name="binding" class="form-select">
+                <select name="binding" class="form-select<?= $isActive('binding') ? ' border-success' : '' ?>">
                     <option value="">Все</option>
                     <option value="hardcover" <?= $filters['binding'] === 'hardcover' ? 'selected' : '' ?>>Твёрдый</option>
                     <option value="paperback" <?= $filters['binding'] === 'paperback' ? 'selected' : '' ?>>Мягкий</option>

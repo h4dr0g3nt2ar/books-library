@@ -44,8 +44,10 @@ final class BookController
             'binding'      => $_GET['binding'] ?? '',
         ];
 
+
+
         $page = max(1, (int) ($_GET['page'] ?? 1));
-        $perPage = 2;
+        $perPage = 20;
         $offset = ($page - 1) * $perPage;
 
         $books = $this->bookRepo->search($filters, $perPage, $offset);
@@ -67,24 +69,47 @@ final class BookController
 
         $allAuthorIds = array_unique($allAuthorIds);
         $authors = $allAuthorIds === [] ? [] : $this->authorRepo->findByIds($allAuthorIds);
-        $allAuthors = [];
+        $authorsById = [];
 
         foreach($authors as $author){
-            $allAuthors[$author->id()] = $author;
+            $authorsById[$author->id()] = $author;
         }
+        $allAuthors    = $this->authorRepo->all();
+        $allCountries  = $this->countryRepo->all();
+        $allPublishers = $this->publisherRepo->all();
+        $allSeries     = $this->seriesRepo->all();
+        $allTags       = $this->tagRepo->all();
+
+        $activeFilters = $this->buildActiveFilters($filters, [
+            'authors'    => $allAuthors,
+            'countries'  => $allCountries,
+            'publishers' => $allPublishers,
+            'series'     => $allSeries,
+            'tags'       => $allTags,
+        ]);
+        //для подсветки полей в форме
+        $activeKeys = array_column($activeFilters, 'key');
+
+        $isActive = function ($key) use ($activeKeys): bool {
+            return in_array($key, $activeKeys);
+        };
 
         $title = 'Список книг';
+        \App\Infrastructure\Debug\Debug::dtc($activeKeys, 'activeKeys');
         $data = [
             'books' => $books,
             'title' => $title,
             'total' => $total,
-            'authorsById' => $allAuthors,
+            'authorsById' => $authorsById,
             'filters' => $filters,
-            'allAuthors' => $this->authorRepo->all(),
-            'allCountries' => $this->countryRepo->all(),
-            'allPublishers' => $this->publisherRepo->all(),
-            'allSeries' => $this->seriesRepo->all(),
-            'allTags' => $this->tagRepo->all(),
+            'activeFilters' => $activeFilters,
+            'activeKeys' => $activeKeys,
+            'isActive' => $isActive,
+            'allAuthors' => $allAuthors,
+            'allCountries' => $allCountries,
+            'allPublishers' => $allPublishers,
+            'allSeries' => $allSeries,
+            'allTags' => $allTags,
             'currentPage' => $page,
             'totalPages' => $totalPages,
             'perPage' => $perPage,
@@ -421,5 +446,42 @@ final class BookController
         $query['page'] = $page;
 
         return '/books?' . http_build_query($query);
+    }
+
+    private function buildActiveFilters(array $filters, array $refs): array{
+        $active = [];
+
+        if($filters['title'] !== ''){
+            $active[] = ['key' => 'title', 'label' => 'Название: ' . $filters['title']];
+        }
+        //справочники
+        $dictFilters = [
+            ['key' => 'author_id', 'ref' => 'authors', 'prefix' => 'Автор'],
+            ['key' => 'country_id', 'ref' => 'countries', 'prefix' => 'Страна'],
+            ['key' => 'publisher_id', 'ref' => 'publishers', 'prefix' => 'Издательство'],
+            ['key' => 'series_id', 'ref' => 'series', 'prefix' => 'Серия'],
+            ['key' => 'tag_id', 'ref' => 'tags', 'prefix' => 'Тег']
+        ];
+        foreach($dictFilters as $def){
+            $id = $filters[$def['key']];
+            if($id <= 0){
+                continue;
+            }
+            $name = '?';
+            foreach($refs[$def['ref']] as $item){
+                if($item->id() === $id){
+                    $name = $item->name();
+                    break;
+                }
+            }
+            $active[] = ['key' => $def['key'], 'label' => $def['prefix'] . ': ' . $name];
+        }
+        if($filters['year_from'] !== null || $filters['year_to'] !== null){
+            $active[] = ['key' => 'year', 'label' => 'Год: ' . $filters['year_from'] . ' - ' . $filters['year_to']];
+        }
+        if($filters['binding'] !== ''){
+            $active[] = ['key' => 'binding', 'label' => 'Переплет: ' . $filters['binding']];
+        }
+        return $active;
     }
 }

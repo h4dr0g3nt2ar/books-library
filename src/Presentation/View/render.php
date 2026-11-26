@@ -16,3 +16,17 @@ function render(string $template, array $data = []): string
     require BASE_PATH . "/src/Presentation/View/{$template}.php";
     return ob_get_clean();
 }
+function buildFilterUrl(array $filters, array $overrides = []): string
+{
+    $merged = array_merge($filters, $overrides);
+
+    $params = [];
+    foreach ($merged as $key => $value) {
+        if ($value === null || $value === '' || $value === 0) {
+            continue;
+        }
+        $params[$key] = $value;
+    }
+
+    return '/books' . ($params === [] ? '' : '?' . http_build_query($params));
+}
