@@ -118,6 +118,14 @@
     <p class="text-muted">Найдено книг: <?= $total ?></p>
 
     <table class="table table-striped table-hover">
+        <colgroup>
+            <col style="width: 60px;">    <!-- ID -->
+            <col>                          <!-- Название -->
+            <col style="width: 80px;">    <!-- Год -->
+            <col style="width: 250px;">   <!-- Авторы -->
+            <col style="width: 140px;">   <!-- Дата создания -->
+            <col style="width: 140px;">   <!-- Кнопки -->
+        </colgroup>
         <thead>
         <tr>
             <th>ID</th>
@@ -147,10 +155,10 @@
                 </td>
                 <td><?= $book->createdAt()->format('d.m.Y H:i') ?></td>
                 <td class="text-end">
-                    <a href="/books/<?= $book->id() ?>" class="btn btn-sm btn-outline-primary">Открыть</a>
-                    <a href="/books/<?= $book->id() ?>/edit" class="btn btn-sm btn-secondary">Изменить</a>
+                    <a href="/books/<?= $book->id() ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                    <a href="/books/<?= $book->id() ?>/edit" class="btn btn-sm btn-secondary"><i class="bi bi-pencil"></i></a>
                     <form action="/books/<?= $book->id() ?>/delete" method="post" class="d-inline" onsubmit="return confirm('Удалить книгу?')">
-                        <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
                     </form>
                 </td>
             </tr>
